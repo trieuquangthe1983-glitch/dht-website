@@ -392,7 +392,7 @@ select.admin-input{cursor:pointer;}
 
 
 /* ── AI ASSISTANT ── */
-.ai-fab{position:fixed;bottom:32px;right:32px;z-index:8000;
+.ai-fab{position:fixed;bottom:32px;right:32px;z-index:9600;
   width:60px;height:60px;border-radius:50%;
   background:linear-gradient(135deg,#1560a8,#00b4d8);
   border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;
@@ -400,14 +400,12 @@ select.admin-input{cursor:pointer;}
   transition:transform .3s,box-shadow .3s;animation:aiFabPulse 3s ease-in-out infinite;}
 .ai-fab:hover{transform:scale(1.1);box-shadow:0 10px 40px rgba(0,180,216,.7);}
 @keyframes aiFabPulse{0%,100%{box-shadow:0 6px 30px rgba(0,180,216,.5)}50%{box-shadow:0 6px 50px rgba(0,180,216,.8)}}
-.ai-panel{position:fixed;bottom:104px;right:32px;z-index:8000;
+.ai-panel{position:fixed;bottom:104px;right:32px;z-index:9600;
   width:420px;max-height:80vh;
-  background:#0d1117;border:1px solid #30363d;border-radius:18px;
-  display:flex;flex-direction:column;overflow:hidden;
-  box-shadow:0 20px 80px rgba(0,0,0,.8);
-  transform:scale(0.9) translateY(20px);opacity:0;pointer-events:none;
-  transition:all .3s cubic-bezier(.34,1.56,.64,1);}
-.ai-panel.open{transform:scale(1) translateY(0);opacity:1;pointer-events:all;}
+  background:#0d1117;border:1px solid rgba(0,180,216,.35);border-radius:18px;
+  display:none;flex-direction:column;overflow:hidden;
+  box-shadow:0 20px 80px rgba(0,0,0,.8);}
+.ai-panel.open{display:flex;}
 .ai-header{display:flex;align-items:center;gap:10px;padding:16px 18px;
   background:linear-gradient(135deg,rgba(21,96,168,.3),rgba(0,180,216,.15));
   border-bottom:1px solid #30363d;flex-shrink:0;}
@@ -1953,7 +1951,7 @@ async function testAI() {
   if (!key) { resultEl.innerHTML = '<span style="color:#f85149">❌ Chưa có Gemini API key. Nhập và lưu key trước.</span>'; return; }
   resultEl.innerHTML = '<span style="color:#00b4d8">⟳ Đang kiểm tra kết nối Gemini...</span>';
   try {
-    let res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=' + key, {
+    let res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + key, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
@@ -2360,13 +2358,15 @@ function delNewsCard(id) {
 // ─── AI FLOATING PANEL ───
 let aiPanelOpen = false;
 function toggleAiPanel() {
+  const panel = document.getElementById('aiPanel');
+  if (!panel) return;
   aiPanelOpen = !aiPanelOpen;
-  document.getElementById('aiPanel').classList.toggle('open', aiPanelOpen);
+  panel.classList.toggle('open', aiPanelOpen);
   if (aiPanelOpen) setTimeout(function(){ document.getElementById('ai-fab-input').focus(); }, 300);
 }
 function fabAsk(q) {
-  document.getElementById('ai-fab-input').value = q;
-  sendFabAI();
+  const i = document.getElementById('ai-fab-input');
+  if (i) { i.value = q; sendFabAI(); }
 }
 
 function appendFabMsg(text, role) {
@@ -2380,58 +2380,83 @@ function appendFabMsg(text, role) {
 }
 
 async function sendFabAI() {
-  let input = document.getElementById('ai-fab-input');
-  let msg = input.value.trim();
+  const input = document.getElementById('ai-fab-input');
+  const msgs  = document.getElementById('ai-fab-messages');
+  if (!input || !msgs) { alert('Lỗi: Không tìm thấy phần tử AI panel!'); return; }
+
+  const msg = input.value.trim();
   if (!msg) return;
   input.value = '';
-  appendFabMsg(msg, 'user');
-  let thinking = appendFabMsg('Đang suy nghĩ...', 'bot thinking');
 
-  let systemPrompt = 'Bạn là DHT AI Assistant, trợ lý thông minh của Công ty Cổ phần Dịch vụ Tổng hợp DHT (dht-v.io.vn). ' +
-    'Công ty hoạt động trong 4 lĩnh vực: Dịch vụ Truyền thông, Thuê & Cho thuê Bất động sản, Sửa chữa Xây dựng & Khai thác Sân thể thao, Thiết kế & Gia công Phần mềm. ' +
-    'Slogan: "Tầm nơi biển lớn – Giương buồm ra khơi". Email: info@dht-v.io.vn. Hãy trả lời ngắn gọn, thân thiện và chuyên nghiệp bằng tiếng Việt.';
+  // Helper: add bubble
+  function bubble(text, cls) {
+    const d = document.createElement('div');
+    d.className = 'ai-msg ' + cls;
+    d.textContent = text;
+    msgs.appendChild(d);
+    msgs.scrollTop = msgs.scrollHeight;
+    return d;
+  }
 
+  bubble(msg, 'user');
+  const bot = bubble('⟳ Đang kết nối Gemini...', 'bot');
+
+  // Step 1: Check API key
+  const apiKey = localStorage.getItem('dht_gemini_key') || '';
+  if (!apiKey) {
+    bot.textContent = '⚙️ Chưa có API key! Vào Quản trị → Cài đặt → Cài đặt AI → nhập key AIzaSy... → Lưu.';
+    return;
+  }
+  bot.textContent = '⟳ Gửi yêu cầu tới Gemini...';
+
+  // Step 2: Call Gemini
   try {
-    let apiKey = localStorage.getItem('dht_gemini_key') || '';
-    if (!apiKey) {
-      thinking.className = 'ai-msg bot';
-      thinking.textContent = '⚙️ Chưa có API key. Vào Quản trị → Cài đặt → mục Cài đặt AI → nhập Gemini API key và lưu.';
-      return;
-    }
-    let fullMsg = systemPrompt + '\n\nCâu hỏi của người dùng: ' + msg;
-    let res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=' + apiKey, {
+    const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + apiKey;
+    const body = JSON.stringify({
+      contents: [{ parts: [{ text: 'Trả lời ngắn tiếng Việt. Bạn là AI của DHT (dht-v.io.vn).\nCâu hỏi: ' + msg }] }]
+    });
+
+    const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ role: 'user', parts: [{ text: fullMsg }] }],
-        generationConfig: { temperature: 0.7, maxOutputTokens: 800 }
-      })
+      body: body
     });
+
+    const json = await res.json();
+
     if (!res.ok) {
-      let errData = await res.json();
-      thinking.className = 'ai-msg bot';
-      thinking.textContent = '❌ Lỗi ' + res.status + ': ' + (errData.error ? errData.error.message : 'Không xác định');
+      bot.textContent = '❌ API lỗi ' + res.status + ': ' + (json.error ? json.error.message : JSON.stringify(json).substring(0, 120));
       return;
     }
-    let data = await res.json();
-    let reply = (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0]) 
-      ? data.candidates[0].content.parts[0].text 
-      : '⚠️ Không có phản hồi từ AI.';
-    thinking.className = 'ai-msg bot';
-    thinking.textContent = reply;
-  } catch(e) {
-    thinking.className = 'ai-msg bot';
-    let apiKey = localStorage.getItem('dht_gemini_key');
-    if (!apiKey) {
-      thinking.textContent = '⚙️ Chưa cài Gemini API key. Vào Quản trị → Cài đặt → Cài đặt AI để nhập key.';
+
+    // Parse response
+    const cands = json.candidates;
+    if (!cands || !cands.length) {
+      bot.textContent = '⚠️ Gemini trả về không có candidates. Toàn bộ phản hồi: ' + JSON.stringify(json).substring(0, 200);
+      return;
+    }
+    const parts = cands[0].content && cands[0].content.parts;
+    if (!parts || !parts.length) {
+      bot.textContent = '⚠️ Candidates[0] không có parts. Data: ' + JSON.stringify(cands[0]).substring(0, 150);
+      return;
+    }
+    const text = parts[0].text;
+    bot.textContent = text || '⚠️ parts[0].text rỗng. Data: ' + JSON.stringify(parts[0]);
+
+  } catch (e) {
+    // Network error, CORS, etc.
+    if (e.message.includes('fetch') || e.message.includes('Failed') || e.message.includes('NetworkError')) {
+      bot.textContent = '🌐 Lỗi mạng/CORS: ' + e.message + '. Nếu đang dùng file:// hãy upload lên GitHub Pages trước.';
     } else {
-      thinking.textContent = '❌ Lỗi kết nối AI: ' + e.message + '. Kiểm tra lại API key trong Cài đặt.';
+      bot.textContent = '❌ Lỗi JS: ' + e.message + ' | ' + e.name;
     }
   }
-  document.getElementById('ai-fab-messages').scrollTop = 99999;
+  msgs.scrollTop = msgs.scrollHeight;
 }
 
+
 // ─── AI WRITE TAB ───
+
 let aiMode = 'write';
 let aiModeConfig = {
   write: { hint: '✍️ Nhập chủ đề → AI sẽ viết bài hoàn chỉnh cho bạn', label: 'Chủ đề bài viết *', placeholder: 'Ví dụ: Giới thiệu dịch vụ cho thuê sân pickleball của DHT Sports Complex...' },
@@ -2458,121 +2483,144 @@ function setAiMode(mode, btn) {
 
 let aiTabHistory = [];
 async function sendAiChat() {
-  let input = document.getElementById('ai-chat-input');
-  let msg = input.value.trim(); if(!msg) return;
+  const input = document.getElementById('ai-chat-input');
+  const msg = (input.value || '').trim();
+  if (!msg) return;
   input.value = '';
-  let container = document.getElementById('ai-tab-chat');
-  let uDiv = document.createElement('div'); uDiv.className='ai-msg user'; uDiv.textContent=msg;
+
+  const container = document.getElementById('ai-tab-chat');
+  const uDiv = document.createElement('div');
+  uDiv.className = 'ai-msg user';
+  uDiv.textContent = msg;
   container.appendChild(uDiv);
-  let bDiv = document.createElement('div'); bDiv.className='ai-msg bot thinking'; bDiv.textContent='Đang suy nghĩ...';
+
+  const bDiv = document.createElement('div');
+  bDiv.className = 'ai-msg bot thinking';
+  bDiv.textContent = '⟳ Đang xử lý...';
   container.appendChild(bDiv);
-  container.scrollTop=99999;
-  aiTabHistory.push({role:'user',content:msg});
-  try {
-    let apiKey = localStorage.getItem('dht_gemini_key') || '';
-    if (!apiKey) {
-      bDiv.className='ai-msg bot';
-      bDiv.textContent='⚙️ Chưa có API key. Vào Cài đặt → Cài đặt AI để nhập Gemini key.';
-      return;
-    }
-    let sysText = 'Ban la DHT AI Assistant chuyen nghiep cho DHT-V.io.vn. Tra loi bang tieng Viet.';
-    let geminiMsgs = aiTabHistory.map(function(m){
-      return {role: m.role==='assistant'?'model':'user', parts:[{text:m.content}]};
-    });
-    if (geminiMsgs.length > 0 && geminiMsgs[0].role === 'user') {
-      geminiMsgs[0].parts[0].text = sysText + '\n\n' + geminiMsgs[0].parts[0].text;
-    }
-    let res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=' + apiKey, {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        contents: geminiMsgs,
-        generationConfig: { temperature: 0.7, maxOutputTokens: 800 }
-      })
-    });
-    if (!res.ok) {
-      let errData = await res.json();
-      bDiv.className='ai-msg bot';
-      bDiv.textContent='❌ Lỗi ' + res.status + ': ' + (errData.error ? errData.error.message : 'Không xác định');
-      return;
-    }
-    let data = await res.json();
-    let reply = (data.candidates&&data.candidates[0]&&data.candidates[0].content&&data.candidates[0].content.parts&&data.candidates[0].content.parts[0]) 
-      ? data.candidates[0].content.parts[0].text 
-      : '⚠️ Không có phản hồi.';
-    bDiv.className='ai-msg bot'; bDiv.textContent=reply;
-    aiTabHistory.push({role:'assistant',content:reply});
-  } catch(e) {
-    bDiv.className='ai-msg bot';
-    let apiKey2 = localStorage.getItem('dht_gemini_key');
-    bDiv.textContent = apiKey2 ? '❌ Lỗi: ' + e.message : '⚙️ Chưa cài Gemini key. Vào Cài đặt → Cài đặt AI để nhập key.';
+  container.scrollTop = container.scrollHeight;
+
+  const apiKey = localStorage.getItem('dht_gemini_key') || '';
+  if (!apiKey) {
+    bDiv.className = 'ai-msg bot';
+    bDiv.textContent = '⚙️ Vào Cài đặt → Cài đặt AI để nhập Gemini API key.';
+    return;
   }
-  container.scrollTop=99999;
+
+  aiTabHistory.push({ role: 'user', content: msg });
+  const contents = aiTabHistory.map(function(m) {
+    return { role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] };
+  });
+
+  try {
+    const res = await fetch(
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + apiKey,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: contents })
+      }
+    );
+    const json = await res.json();
+    if (!res.ok) {
+      bDiv.className = 'ai-msg bot';
+      bDiv.textContent = '❌ Lỗi ' + res.status + ': ' + (json.error ? json.error.message : 'Lỗi không xác định');
+      return;
+    }
+    const text = json?.candidates?.[0]?.content?.parts?.[0]?.text || '⚠️ Không có phản hồi.';
+    bDiv.className = 'ai-msg bot';
+    bDiv.textContent = text;
+    aiTabHistory.push({ role: 'assistant', content: text });
+  } catch (e) {
+    bDiv.className = 'ai-msg bot';
+    bDiv.textContent = '❌ Lỗi: ' + e.message;
+  }
+  container.scrollTop = container.scrollHeight;
 }
 
-let aiModePrompts = {
-  write: function(p){ return 'Hay viet mot bai dang hoan chinh cho trang web cong ty DHT ve chu de: "' + p + '". Bai viet can co tieu de hap dan, noi dung chuyen nghiep, khoang 300-400 tu, phu hop voi phong cach doanh nghiep. Viet bang tieng Viet.'; },
-  ads: function(p){ return 'Viet noi dung quang cao hap dan cho: "' + p + '". Can co: tieu de bat mat, 3 diem noi bat, call-to-action manh. Ngan gon, thuyet phuc, phu hop mang xa hoi. Tieng Viet.'; },
-  summary: function(p){ return 'Hay tom tat noi dung sau thanh 3-5 diem chinh ngan gon: ' + p; },
-  seo: function(p){ return 'Viet doan noi dung chuan SEO (150-200 tu) cho tu khoa: "' + p + '". Tich hop tu khoa tu nhien, de cap loi ich, de doc. Tieng Viet.'; },
-  translate: function(p){ return 'Dich noi dung sau sang tieng Anh chuan, chuyen nghiep: ' + p; },
-  qa: function(p){ return p + ' (Hay tra loi chi tiet, huu ich, bang tieng Viet)'; }
-};
-
 async function runAI() {
-  let prompt = document.getElementById('ai-prompt-input').value.trim();
+  const prompt = (document.getElementById('ai-prompt-input').value || '').trim();
   if (!prompt) { toast('Vui lòng nhập nội dung!', 'err'); return; }
-  let loading = document.getElementById('ai-tab-loading');
-  let resultBox = document.getElementById('ai-tab-result');
-  let resultText = document.getElementById('ai-result-text');
-  loading.style.display = 'flex'; resultBox.style.display = 'none';
+
+  const loading = document.getElementById('ai-tab-loading');
+  const resultBox = document.getElementById('ai-tab-result');
+  const resultText = document.getElementById('ai-result-text');
+  loading.style.display = 'flex';
+  resultBox.style.display = 'none';
+
+  const apiKey = localStorage.getItem('dht_gemini_key') || '';
+  if (!apiKey) {
+    toast('⚙️ Chưa có Gemini API key - vào Cài đặt để nhập key', 'err');
+    loading.style.display = 'none';
+    return;
+  }
+
+  const modePrompts = {
+    write: 'Viết bài đăng hoàn chỉnh cho website công ty DHT-V.io.vn về chủ đề: ' + prompt + '. Viết bằng tiếng Việt, khoảng 300 từ, chuyên nghiệp.',
+    ads: 'Viết nội dung quảng cáo hấp dẫn cho: ' + prompt + '. Có tiêu đề, 3 điểm nổi bật, call-to-action. Tiếng Việt.',
+    summary: 'Tóm tắt nội dung sau thành 3-5 điểm chính: ' + prompt,
+    seo: 'Viết đoạn nội dung chuẩn SEO 150 từ cho từ khóa: ' + prompt + '. Tiếng Việt.',
+    translate: 'Dịch sang tiếng Anh chuyên nghiệp: ' + prompt,
+    qa: prompt + ' (Trả lời chi tiết bằng tiếng Việt)'
+  };
+  const fullPrompt = modePrompts[aiMode] || prompt;
+
   try {
-    let fullPrompt = aiModePrompts[aiMode](prompt);
-    let apiKey = localStorage.getItem('dht_gemini_key') || '';
-    if (!apiKey) {
-      toast('⚙️ Chưa có Gemini API key - vào Cài đặt để nhập key', 'err');
-      loading.style.display = 'none'; return;
-    }
-    let res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=' + apiKey, {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        contents:[{role:'user',parts:[{text:'[Bạn là AI viết nội dung cho DHT-V.io.vn]\n\n' + fullPrompt}]}],
-        generationConfig: { temperature: 0.8, maxOutputTokens: 1500 }
-      })
-    });
+    const res = await fetch(
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + apiKey,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts: [{ text: fullPrompt }] }] })
+      }
+    );
+    const json = await res.json();
     if (!res.ok) {
-      let errData = await res.json();
-      toast('❌ Lỗi ' + res.status + ': ' + (errData.error ? errData.error.message.substring(0,80) : 'Lỗi API'), 'err');
-      loading.style.display = 'none'; return;
+      toast('❌ Lỗi ' + res.status + ': ' + (json.error ? json.error.message.substring(0,80) : 'Lỗi API'), 'err');
+      loading.style.display = 'none';
+      return;
     }
-    let data = await res.json();
-    let reply = (data.candidates&&data.candidates[0]&&data.candidates[0].content&&data.candidates[0].content.parts&&data.candidates[0].content.parts[0]) 
-      ? data.candidates[0].content.parts[0].text 
-      : '⚠️ Không có kết quả.';
-    resultText.textContent = reply;
+    const text = json?.candidates?.[0]?.content?.parts?.[0]?.text || '⚠️ Không có kết quả.';
+    resultText.textContent = text;
     resultBox.style.display = 'block';
     toast('✅ AI đã tạo nội dung!', 'ok');
-  } catch(e) {
-    let apiKey3 = localStorage.getItem('dht_gemini_key');
-    toast(apiKey3 ? 'Lỗi AI: ' + e.message : '⚙️ Chưa cài Gemini key - vào Cài đặt → Cài đặt AI', 'err');
+  } catch (e) {
+    toast('❌ Lỗi: ' + e.message, 'err');
   }
   loading.style.display = 'none';
 }
 
-function copyAiResult() {
-  let text = document.getElementById('ai-result-text').textContent;
-  navigator.clipboard.writeText(text).then(function(){ toast('📋 Đã sao chép!', 'ok'); });
-}
-function insertAiToEditor() {
-  let text = document.getElementById('ai-result-text').textContent;
-  let editor = document.getElementById('editor-content');
-  if (!editor) { switchTab('post-new', document.querySelector('[onclick*="post-new"]')); setTimeout(function(){ document.getElementById('editor-content').innerHTML += '<p>' + text.replace(/\n/g,'<br>') + '</p>'; toast('✅ Đã chèn vào bài viết!','ok'); }, 300); return; }
-  editor.innerHTML += '<p>' + text.split('\n').join('<br>') + '</p>';
-  toast('✅ Đã chèn vào bài viết!', 'ok');
-}
-function quickAI() {
-  switchTab('ai-write', document.querySelector('[onclick*="ai-write"]'));
+async function testAI() {
+  const resultEl = document.getElementById('ai-test-result');
+  const key = localStorage.getItem('dht_gemini_key') || '';
+  if (!key) {
+    resultEl.innerHTML = '<span class="text-danger">❌ Chưa có API key. Nhập và lưu key trước.</span>';
+    return;
+  }
+  resultEl.innerHTML = '<span class="text-cyan">⟳ Đang kiểm tra với gemini-2.5-flash...</span>';
+  try {
+    const res = await fetch(
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + key,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts: [{ text: 'Say: OK' }] }] })
+      }
+    );
+    const json = await res.json();
+    if (!res.ok) {
+      resultEl.innerHTML = '<span class="text-danger">❌ HTTP ' + res.status + ': ' + (json.error ? json.error.message : JSON.stringify(json).substring(0,100)) + '</span>';
+      return;
+    }
+    const text = json?.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (text) {
+      resultEl.innerHTML = '<span class="text-success">✅ Kết nối thành công! Model: gemini-2.5-flash hoạt động tốt.</span>';
+    } else {
+      resultEl.innerHTML = '<span class="text-warn">⚠️ Kết nối OK nhưng phản hồi lạ: ' + JSON.stringify(json).substring(0,120) + '</span>';
+    }
+  } catch (e) {
+    resultEl.innerHTML = '<span class="text-danger">❌ Lỗi mạng: ' + e.message + '</span>';
+  }
 }
 
 
