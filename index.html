@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Công ty Cổ phần Dịch vụ Tổng hợp DHT-V.io.vn</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Be+Vietnam+Pro:wght@300;400;500;600&display=swap" rel="stylesheet">
+<!-- External CSS (inline for single-file deployment) -->
 <style>
 :root{
   --deep:#020b18;--ocean:#041e35;--navy:#071e3d;--mid:#0a3460;
@@ -389,6 +390,266 @@ select.admin-input{cursor:pointer;}
   text-decoration:none;padding:8px;border-radius:8px;transition:background .2s;}
 .dd-footer a:hover{background:rgba(0,180,216,.1);}
 
+
+/* ── AI ASSISTANT ── */
+.ai-fab{position:fixed;bottom:32px;right:32px;z-index:8000;
+  width:60px;height:60px;border-radius:50%;
+  background:linear-gradient(135deg,#1560a8,#00b4d8);
+  border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:26px;box-shadow:0 6px 30px rgba(0,180,216,.5);
+  transition:transform .3s,box-shadow .3s;animation:aiFabPulse 3s ease-in-out infinite;}
+.ai-fab:hover{transform:scale(1.1);box-shadow:0 10px 40px rgba(0,180,216,.7);}
+@keyframes aiFabPulse{0%,100%{box-shadow:0 6px 30px rgba(0,180,216,.5)}50%{box-shadow:0 6px 50px rgba(0,180,216,.8)}}
+.ai-panel{position:fixed;bottom:104px;right:32px;z-index:8000;
+  width:420px;max-height:80vh;
+  background:#0d1117;border:1px solid #30363d;border-radius:18px;
+  display:flex;flex-direction:column;overflow:hidden;
+  box-shadow:0 20px 80px rgba(0,0,0,.8);
+  transform:scale(0.9) translateY(20px);opacity:0;pointer-events:none;
+  transition:all .3s cubic-bezier(.34,1.56,.64,1);}
+.ai-panel.open{transform:scale(1) translateY(0);opacity:1;pointer-events:all;}
+.ai-header{display:flex;align-items:center;gap:10px;padding:16px 18px;
+  background:linear-gradient(135deg,rgba(21,96,168,.3),rgba(0,180,216,.15));
+  border-bottom:1px solid #30363d;flex-shrink:0;}
+.ai-header-icon{width:36px;height:36px;border-radius:10px;
+  background:linear-gradient(135deg,#1560a8,#00b4d8);
+  display:flex;align-items:center;justify-content:center;font-size:18px;}
+.ai-header-title{font-size:14px;font-weight:600;color:#e6edf3;}
+.ai-header-sub{font-size:11px;color:#484f58;}
+.ai-close-btn{margin-left:auto;width:28px;height:28px;border-radius:7px;
+  background:rgba(255,255,255,.05);border:1px solid #30363d;
+  color:#8b949e;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;}
+.ai-messages{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;}
+.ai-messages::-webkit-scrollbar{width:3px;}
+.ai-messages::-webkit-scrollbar-thumb{background:rgba(0,180,216,.3);border-radius:2px;}
+.ai-msg{padding:10px 13px;border-radius:12px;font-size:13px;line-height:1.6;max-width:90%;}
+.ai-msg.user{background:linear-gradient(135deg,#1560a8,#0d3d7a);color:#d4eaf7;
+  align-self:flex-end;border-radius:12px 12px 3px 12px;}
+.ai-msg.bot{background:#161b22;border:1px solid #30363d;color:#c9d1d9;
+  align-self:flex-start;border-radius:12px 12px 12px 3px;}
+.ai-msg.thinking{color:#484f58;font-style:italic;}
+.ai-shortcuts{display:flex;gap:6px;flex-wrap:wrap;padding:10px 14px 6px;flex-shrink:0;}
+.ai-chip{padding:5px 12px;border-radius:20px;font-size:11px;font-weight:500;
+  background:rgba(0,180,216,.08);border:1px solid rgba(0,180,216,.2);
+  color:#00b4d8;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.ai-chip:hover{background:rgba(0,180,216,.18);}
+.ai-input-row{display:flex;gap:8px;padding:12px 14px;border-top:1px solid #30363d;flex-shrink:0;}
+.ai-input{flex:1;background:rgba(255,255,255,.05);border:1px solid #30363d;
+  border-radius:10px;padding:9px 12px;font-size:13px;color:#e6edf3;
+  font-family:'Be Vietnam Pro',sans-serif;outline:none;resize:none;max-height:100px;}
+.ai-input:focus{border-color:#00b4d8;}
+.ai-send{width:38px;height:38px;border-radius:10px;
+  background:linear-gradient(135deg,#1560a8,#00b4d8);
+  border:none;cursor:pointer;font-size:16px;color:#fff;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  transition:opacity .2s;align-self:flex-end;}
+.ai-send:hover{opacity:.85;}
+
+/* ── NEWS CARD EDIT/DELETE overlay ── */
+.news-card{position:relative;}
+.news-card-actions{position:absolute;top:12px;right:12px;
+  display:flex;gap:6px;opacity:0;transition:opacity .25s;z-index:2;}
+.news-card:hover .news-card-actions{opacity:1;}
+.nc-btn{padding:5px 10px;border-radius:7px;font-size:11px;font-weight:600;
+  border:none;cursor:pointer;transition:all .2s;}
+.nc-btn.edit{background:rgba(0,180,216,.2);color:#00b4d8;}
+.nc-btn.del{background:rgba(248,81,73,.2);color:#f85149;}
+.nc-btn:hover{filter:brightness(1.2);}
+
+/* ── MEDIA GRID for images/videos in post ── */
+.post-media-bar{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;padding:10px;
+  background:rgba(255,255,255,.03);border:1px dashed #30363d;border-radius:10px;min-height:60px;}
+.pm-thumb{position:relative;width:80px;height:80px;border-radius:8px;overflow:hidden;
+  border:1px solid #30363d;flex-shrink:0;}
+.pm-thumb img,.pm-thumb video{width:100%;height:100%;object-fit:cover;}
+.pm-thumb .pm-del{position:absolute;top:2px;right:2px;width:18px;height:18px;
+  border-radius:50%;background:rgba(248,81,73,.85);border:none;
+  color:#fff;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.pm-add{width:80px;height:80px;border-radius:8px;border:2px dashed #30363d;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-size:22px;color:#484f58;cursor:pointer;transition:all .2s;flex-shrink:0;}
+.pm-add:hover{border-color:#00b4d8;color:#00b4d8;}
+
+/* ── AI tab in admin ── */
+.ai-tab-wrap{display:flex;flex-direction:column;gap:16px;}
+.ai-mode-btns{display:flex;gap:8px;flex-wrap:wrap;}
+.ai-mode-btn{padding:9px 18px;border-radius:10px;font-size:13px;font-weight:600;
+  background:rgba(255,255,255,.05);border:1px solid #30363d;color:#8b949e;
+  cursor:pointer;transition:all .2s;}
+.ai-mode-btn.active{background:rgba(0,180,216,.12);color:#00b4d8;border-color:rgba(0,180,216,.3);}
+.ai-result-box{background:#0a0f1a;border:1px solid #30363d;border-radius:10px;
+  padding:14px;font-size:13px;color:#c9d1d9;line-height:1.8;min-height:100px;
+  white-space:pre-wrap;position:relative;}
+.ai-result-box .copy-btn{position:absolute;top:8px;right:8px;
+  padding:4px 10px;border-radius:6px;font-size:11px;
+  background:rgba(255,255,255,.07);border:1px solid #30363d;
+  color:#8b949e;cursor:pointer;transition:all .2s;}
+.ai-result-box .copy-btn:hover{color:#00b4d8;border-color:#00b4d8;}
+.ai-result-box .insert-btn{position:absolute;bottom:8px;right:8px;
+  padding:5px 12px;border-radius:6px;font-size:11px;
+  background:rgba(0,180,216,.15);border:1px solid rgba(0,180,216,.3);
+  color:#00b4d8;cursor:pointer;transition:all .2s;}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── UTILITY CLASSES (replacing inline styles) ── */
+.w-100{width:100%!important}
+.d-flex{display:flex}
+.d-none{display:none}
+.d-block{display:block}
+.flex-col{flex-direction:column}
+.flex-wrap{flex-wrap:wrap}
+.align-center{align-items:center}
+.align-baseline{align-items:baseline}
+.justify-center{justify-content:center}
+.justify-between{justify-content:space-between}
+.justify-end{justify-content:flex-end}
+.gap-6{gap:6px}.gap-8{gap:8px}.gap-10{gap:10px}
+.gap-12{gap:12px}.gap-14{gap:14px}.gap-16{gap:16px}
+.gap-20{gap:20px}.gap-24{gap:24px}
+.mt-4{margin-top:4px}.mt-6{margin-top:6px}.mt-8{margin-top:8px}
+.mt-12{margin-top:12px}.mt-16{margin-top:16px}.mt-20{margin-top:20px}
+.mt-24{margin-top:24px}.mt-32{margin-top:32px}
+.mb-4{margin-bottom:4px}.mb-8{margin-bottom:8px}
+.mb-10{margin-bottom:10px}.mb-12{margin-bottom:12px}
+.mb-16{margin-bottom:16px}.mb-20{margin-bottom:20px}
+.mb-24{margin-bottom:24px}.mb-28{margin-bottom:28px}
+.ml-auto{margin-left:auto}
+.p-14{padding:14px}.p-16{padding:16px}
+.p-18{padding:18px}.p-20{padding:20px}
+.pt-8{padding-top:8px}
+.fs-10{font-size:10px}.fs-11{font-size:11px}.fs-12{font-size:12px}
+.fs-13{font-size:13px}.fs-14{font-size:14px}.fs-15{font-size:15px}
+.fs-16{font-size:16px}.fs-18{font-size:18px}
+.fw-500{font-weight:500}.fw-600{font-weight:600}.fw-700{font-weight:700}
+.text-center{text-align:center}
+.text-muted{color:#484f58}
+.text-silver{color:#8b949e}
+.text-foam{color:#e6edf3}
+.text-cyan{color:#00b4d8}
+.text-success{color:#3fb950}
+.text-danger{color:#f85149}
+.text-warn{color:#d4a017}
+.text-gold{color:#c9a227}
+.text-upper{text-transform:uppercase}
+.ls-1{letter-spacing:1px}.ls-2{letter-spacing:2px}
+.lh-16{line-height:1.6}.lh-18{line-height:1.8}
+.pre-wrap{white-space:pre-wrap}
+.overflow-hidden{overflow:hidden}
+.overflow-auto{overflow-y:auto}
+.flex-shrink-0{flex-shrink:0}
+.flex-1{flex:1}
+.border-top-dim{border-top:1px solid rgba(255,255,255,.05)}
+.border-top-admin{border-top:1px solid #30363d}
+.border-left-accent{border-left:3px solid #00b4d8}
+.radius-8{border-radius:8px}
+.radius-10{border-radius:10px}
+.radius-12{border-radius:12px}
+.radius-50{border-radius:50%}
+.bg-admin{background:var(--admin-surface)}
+.bg-admin-dark{background:#0a0f1a}
+.bg-dim{background:rgba(255,255,255,.03)}
+.cursor-pointer{cursor:pointer}
+.min-h-16{min-height:16px}
+.min-h-100{min-height:100px}
+.max-w-480{max-width:480px}
+.max-w-500{max-width:500px}
+/* nav social links */
+.social-link{width:36px;height:36px;border-radius:50%;background:rgba(0,180,216,.1);border:1px solid rgba(0,180,216,.2);display:flex;align-items:center;justify-content:center;color:var(--cyan);text-decoration:none;transition:all .3s}
+.social-link:hover{background:rgba(0,180,216,.2)}
+/* stat card specifics */
+.stat-card-super .val{font-size:28px;font-weight:700;color:#e6edf3;font-family:'Playfair Display',serif}
+.stat-card-super .lbl{font-size:12px;color:#484f58;margin-top:4px;text-transform:uppercase;letter-spacing:.5px}
+/* avatar sb */
+.sb-avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#1560a8,#00b4d8);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0}
+/* phone logo */
+.phone-logo-wrap{width:70px;height:70px;overflow:hidden;border-radius:18px;margin-bottom:16px;box-shadow:0 8px 30px rgba(0,180,216,.4);background:linear-gradient(135deg,#0a2a5e,#041e35)}
+/* hero domain badge */
+.hero-domain-badge{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,rgba(0,180,216,.12),rgba(21,96,168,.08));border:1px solid rgba(0,180,216,.35);border-radius:24px;padding:7px 22px;margin-top:8px;font-size:13px;letter-spacing:2px;color:var(--cyan);font-weight:600;animation:fadeDown 1s ease .15s both}
+/* store btn content */
+.store-icon{font-size:24px}
+.store-label{font-size:10px;color:var(--muted)}
+.store-name{font-size:14px;font-weight:600}
+/* login logo */
+.login-logo-img{height:90px;margin-bottom:20px;filter:brightness(1.3) contrast(1.05) saturate(1.2) drop-shadow(0 0 12px rgba(0,180,216,.5))}
+/* ai fab messages */
+.ai-chat-container{height:220px;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:8px;background:#0a0f1a;border-radius:12px 12px 0 0}
+/* cover preview */
+.cover-preview-img{display:none;margin-top:8px;max-height:80px;border-radius:8px;border:1px solid #30363d}
+/* grid helpers */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+/* overflow-x */
+.overflow-x-auto{overflow-x:auto}
+/* spin */
+.spin{animation:spin 1s linear infinite;display:inline-block}
+
+/* ── ADMIN BUTTON SIZE VARIANTS ── */
+.admin-btn.btn-xs{padding:4px 10px;font-size:11px}
+.admin-btn.btn-sm{padding:5px 10px;font-size:12px}
+.admin-btn.btn-md{padding:6px 12px;font-size:12px}
+.admin-btn.btn-table{padding:7px 12px;font-size:12px}
+
+/* ── AUTO-GENERATED CLASSES (from inline styles) ── */
+.dht-s1{width:100%;height:100%;object-fit:cover;}
+.dht-s2{background:#c9a227}
+.dht-s3{background:#4fc3f7}
+.dht-s4{background:#81c784}
+.dht-s5{background:linear-gradient(to bottom,var(--ocean),var(--deep));}
+.dht-s6{height:280px;font-size:60px;background:linear-gradient(135deg,#071e3d,#0a3460);}
+.dht-s7{font-size:36px;background:linear-gradient(135deg,#0a3460,#041e35);}
+.dht-s8{font-size:36px;background:linear-gradient(135deg,#071e3d,#1560a8);}
+.dht-s9{font-size:36px;background:linear-gradient(135deg,#041e35,#0a3460);}
+.dht-s10{font-size:36px;background:linear-gradient(135deg,#041e35,#071e3d);}
+.dht-s11{mix-blend-mode:multiply;filter:brightness(0.2) sepia(1) hue-rotate(190deg) saturate(5);}
+.dht-s12{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#1560a8,#00b4d8);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;}
+.dht-s13{border:none;border-top:1px solid #30363d;margin:10px 0;}
+.dht-s14{color:#3fb950}
+.dht-s15{color:#d4a017}
+.dht-s16{color:var(--cyan)}
+.dht-s17{color:#484f58;text-align:center;padding:20px}
+.dht-s18{margin:0}
+.dht-s19{font-size:12px;}
+.dht-s20{width:100%;text-align:center;font-size:20px;}
+.dht-s21{font-size:12px}
+.dht-s22{display:none;margin-top:8px;max-height:80px;border-radius:8px;border:1px solid #30363d;}
+.dht-s23{font-size:10px;margin-top:2px}
+.dht-s24{min-height:80px;width:100%;}
+.dht-s25{width:200px}
+.dht-s26{width:140px}
+.dht-s27{width:40%}
+.dht-s28{font-size:40px;margin-bottom:12px;}
+.dht-s29{font-size:15px;margin-bottom:6px;}
+.dht-s30{height:70px;border-radius:8px;border:1px solid var(--admin-border);background:#fff;padding:4px;}
+.dht-s31{flex:1;}
+.dht-s32{flex-shrink:0;padding:8px 12px;}
+.dht-s33{font-size:11px;color:#484f58;margin-top:6px;}
+.dht-s34{font-size:12px;margin-bottom:12px;min-height:16px;}
+.dht-s35{color:#8b949e;font-size:14px;margin-bottom:20px;}
+.dht-s36{justify-content:flex-start;padding:14px 20px;}
+.dht-s37{font-size:20px;}
+.dht-s38{text-align:left;}
+.dht-s39{font-weight:600;}
+.dht-s40{font-size:11px;opacity:.7;margin-top:2px;}
+.dht-s41{color:#8b949e;font-size:13px;margin-bottom:20px;}
+.dht-s42{font-size:12px;color:#484f58;padding:6px 0;}
+.dht-s43{min-height:100px;width:100%;}
+.dht-s44{display:flex;gap:10px;align-items:center;}
+.dht-s45{display:none;font-size:13px;color:#00b4d8;}
+.dht-s46{padding-top:4px;padding-right:70px;padding-bottom:30px;}
+.dht-s47{background:#0a0f1a;border:1px solid #30363d;border-radius:12px;overflow:hidden;}
+.dht-s48{height:220px;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:8px;}
+.dht-s49{display:flex;gap:8px;padding:10px;border-top:1px solid #30363d;}
+.dht-s50{flex:1}
+.dht-s51{flex-shrink:0;}
+.dht-s52{display:none;background:rgba(255,255,255,.03);border:1px solid #30363d;border-radius:12px;padding:20px;margin-bottom:20px;}
+.dht-s53{min-height:90px;width:100%;}
+.dht-s54{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.dht-s55{display:flex;gap:10px;margin-top:4px;}
+.dht-s56{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;}
+.dht-s57{width:100%;}
+.dht-s58{text-align:center;color:#3fb950}
+.dht-s59{text-align:center;color:#f85149}
 </style>
 </head>
 <body>
@@ -553,15 +814,15 @@ select.admin-input{cursor:pointer;}
       <div class="glow-ring"></div><div class="glow-ring"></div>
       <div class="phone-frame">
         <div class="phone-notch"></div>
-        <div class="phone-screen-logo"><img id="phone-logo-img" style="width:100%;height:100%;object-fit:cover;" alt="DHT"></div>
+        <div class="phone-screen-logo"><img id="phone-logo-img" class="dht-s1" alt="DHT"></div>
         <div class="phone-screen-title">DHT Services</div>
         <div class="phone-screen-sub">Phiên bản 2.5.0</div>
         <div class="phone-menu">
           <div class="phone-item"><div class="phone-dot"></div>Theo dõi dự án</div>
-          <div class="phone-item"><div class="phone-dot" style="background:#c9a227"></div>Đặt dịch vụ</div>
-          <div class="phone-item"><div class="phone-dot" style="background:#4fc3f7"></div>Hợp đồng điện tử</div>
+          <div class="phone-item"><div class="phone-dot dht-s2"></div>Đặt dịch vụ</div>
+          <div class="phone-item"><div class="phone-dot dht-s3"></div>Hợp đồng điện tử</div>
           <div class="phone-item"><div class="phone-dot"></div>Báo cáo thống kê</div>
-          <div class="phone-item"><div class="phone-dot" style="background:#81c784"></div>Hỗ trợ trực tuyến</div>
+          <div class="phone-item"><div class="phone-dot dht-s4"></div>Hỗ trợ trực tuyến</div>
         </div>
       </div>
     </div>
@@ -584,18 +845,18 @@ select.admin-input{cursor:pointer;}
 </section>
 
 <!-- DỰ ÁN -->
-<section id="du-an" style="background:linear-gradient(to bottom,var(--ocean),var(--deep));">
+<section id="du-an" class="dht-s5">
   <div class="section-header">
     <div class="section-tag">▸ Dự án nổi bật</div>
     <h2 class="section-title">Những Dấu Ấn<br>Đáng Tự Hào</h2>
     <div class="section-line"></div>
   </div>
   <div class="projects-grid">
-    <div class="project-card"><div class="project-img" style="height:280px;font-size:60px;background:linear-gradient(135deg,#071e3d,#0a3460);">🏙️</div><div class="project-body"><div class="project-tag">Bất động sản</div><div class="project-title">Khu đô thị DHT Riverside Complex</div><div class="project-desc">Tổ hợp đô thị thương mại – căn hộ cao cấp ven sông với tổng diện tích 12 ha, 800 căn hộ và hệ thống tiện ích đẳng cấp quốc tế.</div><div class="project-footer"><div class="project-stat">Giá trị: <strong>1,200 tỷ VNĐ</strong></div><div class="arrow-btn">→</div></div></div></div>
-    <div class="project-card"><div class="project-img" style="font-size:36px;background:linear-gradient(135deg,#0a3460,#041e35);">🚢</div><div class="project-body"><div class="project-tag">Truyền thông</div><div class="project-title">Chiến dịch thương hiệu DHT Media</div><div class="project-desc">Chiến dịch truyền thông đa kênh phủ sóng toàn quốc.</div><div class="project-footer"><div class="project-stat">Reach: <strong>5M người</strong></div><div class="arrow-btn">→</div></div></div></div>
-    <div class="project-card"><div class="project-img" style="font-size:36px;background:linear-gradient(135deg,#071e3d,#1560a8);">⚽</div><div class="project-body"><div class="project-tag">Sân thể thao</div><div class="project-title">Khu thể thao DHT Sports Complex</div><div class="project-desc">Cụm sân bóng, tennis, cầu lông và pickleball hiện đại.</div><div class="project-footer"><div class="project-stat">DT: <strong>8,000 m²</strong></div><div class="arrow-btn">→</div></div></div></div>
-    <div class="project-card"><div class="project-img" style="font-size:36px;background:linear-gradient(135deg,#041e35,#0a3460);">💻</div><div class="project-body"><div class="project-tag">Phần mềm</div><div class="project-title">Hệ thống ERP DHT SmartBiz</div><div class="project-desc">Phần mềm quản trị doanh nghiệp toàn diện triển khai cho 50+ khách hàng.</div><div class="project-footer"><div class="project-stat">Users: <strong>10,000+</strong></div><div class="arrow-btn">→</div></div></div></div>
-    <div class="project-card"><div class="project-img" style="font-size:36px;background:linear-gradient(135deg,#041e35,#071e3d);">🏢</div><div class="project-body"><div class="project-tag">Bất động sản</div><div class="project-title">Tòa văn phòng DHT Tower</div><div class="project-desc">Cho thuê mặt bằng thương mại và văn phòng hạng A tại vị trí đắc địa.</div><div class="project-footer"><div class="project-stat">DT: <strong>15,000 m²</strong></div><div class="arrow-btn">→</div></div></div></div>
+    <div class="project-card"><div class="project-img dht-s6">🏙️</div><div class="project-body"><div class="project-tag">Bất động sản</div><div class="project-title">Khu đô thị DHT Riverside Complex</div><div class="project-desc">Tổ hợp đô thị thương mại – căn hộ cao cấp ven sông với tổng diện tích 12 ha, 800 căn hộ và hệ thống tiện ích đẳng cấp quốc tế.</div><div class="project-footer"><div class="project-stat">Giá trị: <strong>1,200 tỷ VNĐ</strong></div><div class="arrow-btn">→</div></div></div></div>
+    <div class="project-card"><div class="project-img dht-s7">🚢</div><div class="project-body"><div class="project-tag">Truyền thông</div><div class="project-title">Chiến dịch thương hiệu DHT Media</div><div class="project-desc">Chiến dịch truyền thông đa kênh phủ sóng toàn quốc.</div><div class="project-footer"><div class="project-stat">Reach: <strong>5M người</strong></div><div class="arrow-btn">→</div></div></div></div>
+    <div class="project-card"><div class="project-img dht-s8">⚽</div><div class="project-body"><div class="project-tag">Sân thể thao</div><div class="project-title">Khu thể thao DHT Sports Complex</div><div class="project-desc">Cụm sân bóng, tennis, cầu lông và pickleball hiện đại.</div><div class="project-footer"><div class="project-stat">DT: <strong>8,000 m²</strong></div><div class="arrow-btn">→</div></div></div></div>
+    <div class="project-card"><div class="project-img dht-s9">💻</div><div class="project-body"><div class="project-tag">Phần mềm</div><div class="project-title">Hệ thống ERP DHT SmartBiz</div><div class="project-desc">Phần mềm quản trị doanh nghiệp toàn diện triển khai cho 50+ khách hàng.</div><div class="project-footer"><div class="project-stat">Users: <strong>10,000+</strong></div><div class="arrow-btn">→</div></div></div></div>
+    <div class="project-card"><div class="project-img dht-s10">🏢</div><div class="project-body"><div class="project-tag">Bất động sản</div><div class="project-title">Tòa văn phòng DHT Tower</div><div class="project-desc">Cho thuê mặt bằng thương mại và văn phòng hạng A tại vị trí đắc địa.</div><div class="project-footer"><div class="project-stat">DT: <strong>15,000 m²</strong></div><div class="arrow-btn">→</div></div></div></div>
   </div>
 </section>
 
@@ -605,10 +866,10 @@ select.admin-input{cursor:pointer;}
     <div class="footer-brand">
       <img id="footer-logo-img" alt="DHT Logo">
       <p>Công ty Cổ phần Dịch vụ Tổng hợp DHT – Đơn vị tiên phong trong lĩnh vực dịch vụ đa ngành, cam kết mang lại giải pháp tối ưu và bền vững cho khách hàng.</p>
-      <div style="display:flex;gap:12px;margin-top:24px;">
-        <a href="#" style="width:36px;height:36px;border-radius:50%;background:rgba(0,180,216,.1);border:1px solid rgba(0,180,216,.2);display:flex;align-items:center;justify-content:center;color:var(--cyan);text-decoration:none;">f</a>
-        <a href="#" style="width:36px;height:36px;border-radius:50%;background:rgba(0,180,216,.1);border:1px solid rgba(0,180,216,.2);display:flex;align-items:center;justify-content:center;color:var(--cyan);text-decoration:none;">in</a>
-        <a href="#" style="width:36px;height:36px;border-radius:50%;background:rgba(0,180,216,.1);border:1px solid rgba(0,180,216,.2);display:flex;align-items:center;justify-content:center;color:var(--cyan);text-decoration:none;">yt</a>
+      <div class="d-flex gap-12 mt-24">
+        <a href="#" class="social-link">f</a>
+        <a href="#" class="social-link">in</a>
+        <a href="#" class="social-link">yt</a>
       </div>
     </div>
     <div class="footer-col">
@@ -629,9 +890,9 @@ select.admin-input{cursor:pointer;}
 
 
 <!-- LOGIN GATE -->
-<div class="login-overlay" id="loginOverlay" style="display:none;">
+<div class="login-overlay" id="loginOverlay" class="d-none">
   <div class="login-box">
-    <img id="login-logo" class="login-logo" alt="DHT Logo" style="mix-blend-mode:multiply;filter:brightness(0.2) sepia(1) hue-rotate(190deg) saturate(5);">
+    <img id="login-logo" class="login-logo" alt="DHT Logo" class="dht-s11">
     <div class="login-title">Bảng Quản Trị</div>
     <div class="login-sub">DHT-V.io.vn – Đăng nhập để tiếp tục</div>
     <input class="login-input" id="login-user" placeholder="Tên đăng nhập" autocomplete="username">
@@ -655,19 +916,20 @@ select.admin-input{cursor:pointer;}
     <!-- SIDEBAR -->
     <div class="admin-sidebar">
       <div class="admin-user-bar">
-        <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#1560a8,#00b4d8);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;" id="sb-avatar">A</div>
+        <div class="dht-s12" id="sb-avatar">A</div>
         <div><div class="au-name" id="sb-name">Admin</div><div class="au-role" id="sb-role">Super Admin</div></div>
       </div>
       <div class="admin-menu-item active" onclick="switchTab('dashboard',this)"><span class="admin-menu-icon">📊</span>Tổng quan</div>
       <div class="admin-menu-item perm-editor" onclick="switchTab('post-new',this)"><span class="admin-menu-icon">✏️</span>Đăng bài mới</div>
       <div class="admin-menu-item perm-editor" onclick="switchTab('post-list',this)"><span class="admin-menu-icon">📋</span>Quản lý bài viết</div>
       <div class="admin-menu-item perm-admin" onclick="switchTab('media',this)"><span class="admin-menu-icon">🖼️</span>Tải lên / Tải xuống</div>
+      <div class="admin-menu-item perm-editor" onclick="switchTab('ai-write',this)"><span class="admin-menu-icon">🤖</span>Trợ lý AI</div>
       <div class="admin-menu-item perm-admin" onclick="switchTab('software',this)"><span class="admin-menu-icon">📦</span>Quản lý phần mềm</div>
       <div class="admin-menu-item perm-admin" onclick="switchTab('settings',this)"><span class="admin-menu-icon">🔧</span>Cài đặt trang</div>
       <div class="admin-menu-item perm-admin" onclick="switchTab('export',this)"><span class="admin-menu-icon">💾</span>Xuất dữ liệu</div>
       <div class="admin-menu-item perm-super" onclick="switchTab('users',this)"><span class="admin-menu-icon">👥</span>Phân quyền & Users</div>
-      <hr style="border:none;border-top:1px solid #30363d;margin:10px 0;">
-      <div class="admin-menu-item" onclick="doLogout()" style="color:#f85149;"><span class="admin-menu-icon">🚪</span>Đăng xuất</div>
+      <hr class="dht-s13">
+      <div class="admin-menu-item" onclick="doLogout()" class="text-danger"><span class="admin-menu-icon">🚪</span>Đăng xuất</div>
     </div>
 
     <!-- CONTENT -->
@@ -677,28 +939,31 @@ select.admin-input{cursor:pointer;}
       <div class="admin-section active" id="tab-dashboard">
         <div class="stat-cards">
           <div class="stat-card"><div class="val" id="dash-total">0</div><div class="lbl">Tổng bài viết</div><div class="trend">↑ Tất cả bài đăng</div></div>
-          <div class="stat-card"><div class="val" id="dash-pub">0</div><div class="lbl">Đã xuất bản</div><div class="trend" style="color:#3fb950">✓ Đang hiển thị</div></div>
-          <div class="stat-card"><div class="val" id="dash-draft">0</div><div class="lbl">Bản nháp</div><div class="trend" style="color:#d4a017">⏳ Chờ duyệt</div></div>
-          <div class="stat-card"><div class="val" id="dash-media">0</div><div class="lbl">Tệp media</div><div class="trend" style="color:var(--cyan)">📁 Đã tải lên</div></div>
+          <div class="stat-card"><div class="val" id="dash-pub">0</div><div class="lbl">Đã xuất bản</div><div class="trend dht-s14">✓ Đang hiển thị</div></div>
+          <div class="stat-card"><div class="val" id="dash-draft">0</div><div class="lbl">Bản nháp</div><div class="trend dht-s15">⏳ Chờ duyệt</div></div>
+          <div class="stat-card"><div class="val" id="dash-media">0</div><div class="lbl">Tệp media</div><div class="trend dht-s16">📁 Đã tải lên</div></div>
         </div>
         <div class="admin-section-title">📰 Bài viết gần đây</div>
         <table class="admin-table">
           <thead><tr><th>Tiêu đề</th><th>Danh mục</th><th>Trạng thái</th><th>Ngày</th></tr></thead>
-          <tbody id="dash-recent-body"><tr><td colspan="4" style="color:#484f58;text-align:center;padding:20px">Chưa có bài viết nào</td></tr></tbody>
+          <tbody id="dash-recent-body"><tr><td colspan="4" class="dht-s17">Chưa có bài viết nào</td></tr></tbody>
         </table>
       </div>
 
       <!-- POST NEW -->
       <div class="admin-section" id="tab-post-new">
-        <div class="admin-section-title">✏️ Tạo bài viết mới</div>
+        <div class="d-flex align-center justify-between mb-16">
+          <div class="admin-section-title dht-s18" id="post-form-label">✏️ Tạo bài viết mới</div>
+          <button class="admin-btn secondary" onclick="quickAI()" class="dht-s19">🤖 AI hỗ trợ viết</button>
+        </div>
         <div class="form-group">
           <label class="form-label">Tiêu đề bài viết *</label>
-          <input class="admin-input" id="post-title" placeholder="Nhập tiêu đề hấp dẫn…" style="width:100%">
+          <input class="admin-input" id="post-title" placeholder="Nhập tiêu đề hấp dẫn…" class="w-100">
         </div>
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Danh mục</label>
-            <select class="admin-input" id="post-cat" style="width:100%">
+            <select class="admin-input" id="post-cat" class="w-100">
               <option value="Tin tức">Tin tức</option>
               <option value="Truyền thông">Truyền thông</option>
               <option value="Bất động sản">Bất động sản</option>
@@ -709,15 +974,26 @@ select.admin-input{cursor:pointer;}
           </div>
           <div class="form-group">
             <label class="form-label">Trạng thái</label>
-            <select class="admin-input" id="post-status" style="width:100%">
+            <select class="admin-input" id="post-status" class="w-100">
               <option value="published">Xuất bản ngay</option>
               <option value="draft">Lưu nháp</option>
             </select>
           </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Emoji / Icon đại diện</label>
-          <input class="admin-input" id="post-icon" placeholder="📰" style="width:80px;text-align:center;font-size:20px;">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Emoji / Icon đại diện</label>
+            <input class="admin-input" id="post-icon" placeholder="📰" class="dht-s20">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Ảnh bìa (Cover)</label>
+            <div class="d-flex align-center gap-10">
+              <button class="admin-btn secondary dht-s21" onclick="document.getElementById('cover-input').click()">🖼️ Chọn ảnh bìa</button>
+              <span id="cover-name" class="fs-12 text-muted">Chưa chọn</span>
+              <input type="file" id="cover-input" accept="image/*" class="d-none" onchange="handleCover(this)">
+            </div>
+            <img id="cover-preview" class="dht-s22">
+          </div>
         </div>
         <div class="form-group">
           <label class="form-label">Nội dung bài viết *</label>
@@ -729,28 +1005,39 @@ select.admin-input{cursor:pointer;}
             <button class="editor-btn" onclick="fmt('insertOrderedList')">1. List</button>
             <button class="editor-btn" onclick="fmt('formatBlock','h2')">H2</button>
             <button class="editor-btn" onclick="fmt('formatBlock','p')">¶</button>
+            <button class="editor-btn" onclick="insertMediaToEditor()">📎 Chèn media</button>
             <button class="editor-btn" onclick="clearEditor()">🗑 Xóa</button>
           </div>
           <div id="editor-content" contenteditable="true" placeholder="Nhập nội dung bài viết tại đây…"></div>
         </div>
         <div class="form-group">
-          <label class="form-label">Tóm tắt (hiển thị trên trang chủ)</label>
-          <textarea class="admin-input" id="post-excerpt" placeholder="Mô tả ngắn gọn về bài viết…" style="min-height:80px;width:100%;"></textarea>
+          <label class="form-label">📎 Tải lên Ảnh / Video cho bài viết</label>
+          <div class="post-media-bar" id="post-media-bar">
+            <div class="pm-add" onclick="document.getElementById('pm-input').click()" title="Thêm ảnh/video">
+              <span>＋</span><span class="dht-s23">Thêm</span>
+            </div>
+            <input type="file" id="pm-input" accept="image/*,video/*" multiple class="d-none" onchange="handlePostMedia(this.files)">
+          </div>
         </div>
-        <div style="display:flex;gap:10px;margin-top:8px;">
+        <div class="form-group">
+          <label class="form-label">Tóm tắt (hiển thị trên trang chủ)</label>
+          <textarea class="admin-input" id="post-excerpt" placeholder="Mô tả ngắn gọn về bài viết…" class="dht-s24"></textarea>
+        </div>
+        <div class="d-flex gap-10 mt-8 flex-wrap">
           <button class="admin-btn primary" onclick="savePost()">🚀 Đăng bài</button>
           <button class="admin-btn secondary" onclick="savePost('draft')">💾 Lưu nháp</button>
           <button class="admin-btn secondary" onclick="previewPost()">👁 Xem trước</button>
+          <button class="admin-btn danger" onclick="resetPostForm()" class="ml-auto">✕ Hủy chỉnh sửa</button>
         </div>
       </div>
 
       <!-- POST LIST -->
       <div class="admin-section" id="tab-post-list">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-          <div class="admin-section-title" style="margin:0">📋 Danh sách bài viết</div>
-          <div style="display:flex;gap:8px;">
-            <input class="admin-input" id="search-posts" placeholder="🔍 Tìm kiếm…" style="width:200px" oninput="renderPostList()">
-            <select class="admin-input" id="filter-status" onchange="renderPostList()" style="width:140px">
+        <div class="d-flex align-center justify-between mb-16">
+          <div class="admin-section-title dht-s18">📋 Danh sách bài viết</div>
+          <div class="d-flex gap-8">
+            <input class="admin-input" id="search-posts" placeholder="🔍 Tìm kiếm…" class="dht-s25" oninput="renderPostList()">
+            <select class="admin-input" id="filter-status" onchange="renderPostList()" class="dht-s26">
               <option value="">Tất cả</option>
               <option value="published">Đã xuất bản</option>
               <option value="draft">Bản nháp</option>
@@ -758,7 +1045,7 @@ select.admin-input{cursor:pointer;}
           </div>
         </div>
         <table class="admin-table">
-          <thead><tr><th style="width:40%">Tiêu đề</th><th>Danh mục</th><th>Trạng thái</th><th>Ngày</th><th>Hành động</th></tr></thead>
+          <thead><tr><th class="dht-s27">Tiêu đề</th><th>Danh mục</th><th>Trạng thái</th><th>Ngày</th><th>Hành động</th></tr></thead>
           <tbody id="post-list-body"></tbody>
         </table>
       </div>
@@ -767,15 +1054,15 @@ select.admin-input{cursor:pointer;}
       <div class="admin-section" id="tab-media">
         <div class="admin-section-title">🖼️ Tải lên tệp tin</div>
         <div class="file-drop" onclick="document.getElementById('file-input').click()" id="file-drop-zone">
-          <div style="font-size:40px;margin-bottom:12px;">📁</div>
-          <div style="font-size:15px;margin-bottom:6px;">Nhấn để chọn tệp hoặc kéo & thả vào đây</div>
-          <div style="font-size:12px;color:#484f58;">Hỗ trợ: JPG, PNG, PDF, DOCX, XLSX, MP4, ZIP (tối đa 50MB)</div>
-          <input type="file" id="file-input" style="display:none" multiple onchange="handleFileUpload(this.files)">
+          <div class="dht-s28">📁</div>
+          <div class="dht-s29">Nhấn để chọn tệp hoặc kéo & thả vào đây</div>
+          <div class="fs-12 text-muted">Hỗ trợ: JPG, PNG, PDF, DOCX, XLSX, MP4, ZIP (tối đa 50MB)</div>
+          <input type="file" id="file-input" class="d-none" multiple onchange="handleFileUpload(this.files)">
         </div>
         <div class="file-list" id="file-list"></div>
         <hr class="admin-divider">
         <div class="admin-section-title">⬇️ Tải xuống dữ liệu</div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <div class="d-flex gap-10 flex-wrap">
           <button class="admin-btn success" onclick="downloadData('posts')">📥 Tải xuống Bài viết (JSON)</button>
           <button class="admin-btn success" onclick="downloadData('media')">📥 Tải xuống Danh sách Media (JSON)</button>
           <button class="admin-btn success" onclick="downloadData('all')">📦 Tải xuống Toàn bộ dữ liệu</button>
@@ -787,66 +1074,83 @@ select.admin-input{cursor:pointer;}
         <div class="admin-section-title">🔧 Cài đặt trang web</div>
         <div class="form-group">
           <label class="form-label">Tên công ty</label>
-          <input class="admin-input" id="set-company" value="Công ty Cổ phần Dịch vụ Tổng hợp DHT" style="width:100%">
+          <input class="admin-input" id="set-company" value="Công ty Cổ phần Dịch vụ Tổng hợp DHT" class="w-100">
         </div>
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Tên miền</label>
-            <input class="admin-input" id="set-domain" value="dht-v.io.vn" style="width:100%">
+            <input class="admin-input" id="set-domain" value="dht-v.io.vn" class="w-100">
           </div>
           <div class="form-group">
             <label class="form-label">Điện thoại</label>
-            <input class="admin-input" id="set-phone" value="(024) 1234 5678" style="width:100%">
+            <input class="admin-input" id="set-phone" value="(024) 1234 5678" class="w-100">
           </div>
         </div>
         <div class="form-group">
           <label class="form-label">Email liên hệ</label>
-          <input class="admin-input" id="set-email" value="info@dht-v.io.vn" style="width:100%">
+          <input class="admin-input" id="set-email" value="info@dht-v.io.vn" class="w-100">
         </div>
         <div class="form-group">
           <label class="form-label">Địa chỉ</label>
-          <input class="admin-input" id="set-address" value="Hà Nội, Việt Nam" style="width:100%">
+          <input class="admin-input" id="set-address" value="Hà Nội, Việt Nam" class="w-100">
         </div>
         <div class="form-group">
           <label class="form-label">Slogan</label>
-          <input class="admin-input" id="set-slogan" value="Tầm nơi biển lớn – Giương buồm ra khơi" style="width:100%">
+          <input class="admin-input" id="set-slogan" value="Tầm nơi biển lớn – Giương buồm ra khơi" class="w-100">
         </div>
         <div class="form-group">
           <label class="form-label">Logo (tải lên logo mới)</label>
-          <div style="display:flex;align-items:center;gap:14px;">
-            <img id="settings-logo-preview" style="height:70px;border-radius:8px;border:1px solid var(--admin-border);background:#fff;padding:4px;" alt="Logo preview">
+          <div class="d-flex align-center gap-14">
+            <img id="settings-logo-preview" class="dht-s30" alt="Logo preview">
             <button class="admin-btn secondary" onclick="document.getElementById('logo-upload').click()">📷 Đổi logo</button>
-            <input type="file" id="logo-upload" accept="image/*" style="display:none" onchange="handleLogoUpload(this)">
+            <input type="file" id="logo-upload" accept="image/*" class="d-none" onchange="handleLogoUpload(this)">
           </div>
         </div>
         <hr class="admin-divider">
-        <div class="admin-section-title" style="margin-top:8px;">📊 Số liệu thống kê</div>
+        <div class="admin-section-title mt-8">📊 Số liệu thống kê</div>
         <div class="form-row">
-          <div class="form-group"><label class="form-label">Năm kinh nghiệm</label><input class="admin-input" id="stat-years" type="number" value="15" style="width:100%"></div>
-          <div class="form-group"><label class="form-label">Dự án hoàn thành</label><input class="admin-input" id="stat-projects" type="number" value="120" style="width:100%"></div>
+          <div class="form-group"><label class="form-label">Năm kinh nghiệm</label><input class="admin-input" id="stat-years" type="number" value="15" class="w-100"></div>
+          <div class="form-group"><label class="form-label">Dự án hoàn thành</label><input class="admin-input" id="stat-projects" type="number" value="120" class="w-100"></div>
         </div>
         <div class="form-row">
-          <div class="form-group"><label class="form-label">Khách hàng</label><input class="admin-input" id="stat-clients" type="number" value="500" style="width:100%"></div>
-          <div class="form-group"><label class="form-label">Đối tác</label><input class="admin-input" id="stat-partners" type="number" value="50" style="width:100%"></div>
+          <div class="form-group"><label class="form-label">Khách hàng</label><input class="admin-input" id="stat-clients" type="number" value="500" class="w-100"></div>
+          <div class="form-group"><label class="form-label">Đối tác</label><input class="admin-input" id="stat-partners" type="number" value="50" class="w-100"></div>
         </div>
-        <button class="admin-btn primary" onclick="saveSettings()" style="margin-top:8px;">💾 Lưu cài đặt</button>
+        <button class="admin-btn primary" onclick="saveSettings()" class="mt-8">💾 Lưu cài đặt</button>
 
-        <hr class="admin-divider" style="margin-top:24px;">
+        <hr class="admin-divider mt-24">
+        <div class="admin-section-title">🤖 Cài đặt AI Assistant</div>
+        <div class="max-w-480">
+          <div class="form-group">
+            <label class="form-label">Anthropic API Key</label>
+            <div class="d-flex gap-8">
+              <input class="admin-input" type="password" id="set-api-key" placeholder="AIzaSy..." class="dht-s31">
+              <button class="admin-btn secondary" onclick="toggleApiKeyVisibility()" class="dht-s32">👁</button>
+            </div>
+            <div class="dht-s33">
+              Lấy API key miễn phí tại <a href="https://aistudio.google.com/apikey" target="_blank" class="text-cyan">aistudio.google.com</a> → Get API key → Create API key
+            </div>
+          </div>
+          <button class="admin-btn primary" onclick="saveApiKey()" class="mb-8">💾 Lưu API Key</button>
+          <button class="admin-btn secondary" onclick="testAI()" class="mb-8">🧪 Kiểm tra kết nối AI</button>
+          <div id="ai-test-result" class="fs-12 mt-8 min-h-16"></div>
+        </div>
+        <hr class="admin-divider mt-24">
         <div class="admin-section-title">🔑 Đổi mật khẩu quản trị viên</div>
-        <div style="max-width:480px;">
+        <div class="max-w-480">
           <div class="form-group">
             <label class="form-label">Mật khẩu hiện tại *</label>
-            <input class="admin-input" type="password" id="pw-current" placeholder="••••••••" style="width:100%">
+            <input class="admin-input" type="password" id="pw-current" placeholder="••••••••" class="w-100">
           </div>
           <div class="form-group">
             <label class="form-label">Mật khẩu mới *</label>
-            <input class="admin-input" type="password" id="pw-new" placeholder="Tối thiểu 6 ký tự" style="width:100%">
+            <input class="admin-input" type="password" id="pw-new" placeholder="Tối thiểu 6 ký tự" class="w-100">
           </div>
           <div class="form-group">
             <label class="form-label">Xác nhận mật khẩu mới *</label>
-            <input class="admin-input" type="password" id="pw-confirm" placeholder="Nhập lại mật khẩu mới" style="width:100%">
+            <input class="admin-input" type="password" id="pw-confirm" placeholder="Nhập lại mật khẩu mới" class="w-100">
           </div>
-          <div id="pw-strength" style="font-size:12px;margin-bottom:12px;min-height:16px;"></div>
+          <div id="pw-strength" class="dht-s34"></div>
           <button class="admin-btn primary" onclick="changePassword()">🔒 Đổi mật khẩu</button>
         </div>
       </div>
@@ -854,61 +1158,110 @@ select.admin-input{cursor:pointer;}
       <!-- EXPORT -->
       <div class="admin-section" id="tab-export">
         <div class="admin-section-title">💾 Xuất & Nhập dữ liệu</div>
-        <p style="color:#8b949e;font-size:14px;margin-bottom:20px;">Sao lưu toàn bộ dữ liệu trang web hoặc nhập lại từ file backup.</p>
-        <div style="display:flex;flex-direction:column;gap:12px;max-width:500px;">
-          <button class="admin-btn success" onclick="exportFull()" style="justify-content:flex-start;padding:14px 20px;">
-            <span style="font-size:20px;">📦</span>
-            <div style="text-align:left;"><div style="font-weight:600;">Xuất toàn bộ dữ liệu (JSON)</div><div style="font-size:11px;opacity:.7;margin-top:2px;">Bài viết, cài đặt, media metadata</div></div>
+        <p class="dht-s35">Sao lưu toàn bộ dữ liệu trang web hoặc nhập lại từ file backup.</p>
+        <div class="d-flex flex-col gap-12 max-w-500">
+          <button class="admin-btn success" onclick="exportFull()" class="dht-s36">
+            <span class="dht-s37">📦</span>
+            <div class="dht-s38"><div class="dht-s39">Xuất toàn bộ dữ liệu (JSON)</div><div class="dht-s40">Bài viết, cài đặt, media metadata</div></div>
           </button>
-          <button class="admin-btn success" onclick="exportHTML()" style="justify-content:flex-start;padding:14px 20px;">
-            <span style="font-size:20px;">🌐</span>
-            <div style="text-align:left;"><div style="font-weight:600;">Xuất trang web (HTML)</div><div style="font-size:11px;opacity:.7;margin-top:2px;">File HTML hoàn chỉnh có thể triển khai</div></div>
+          <button class="admin-btn success" onclick="exportHTML()" class="dht-s36">
+            <span class="dht-s37">🌐</span>
+            <div class="dht-s38"><div class="dht-s39">Xuất trang web (HTML)</div><div class="dht-s40">File HTML hoàn chỉnh có thể triển khai</div></div>
           </button>
           <hr class="admin-divider">
           <div class="form-group">
             <label class="form-label">Nhập dữ liệu từ backup (JSON)</label>
-            <div style="display:flex;gap:10px;">
+            <div class="d-flex gap-10">
               <button class="admin-btn secondary" onclick="document.getElementById('import-input').click()">📂 Chọn file JSON</button>
-              <input type="file" id="import-input" accept=".json" style="display:none" onchange="importData(this)">
+              <input type="file" id="import-input" accept=".json" class="d-none" onchange="importData(this)">
             </div>
           </div>
         </div>
       </div>
 
 
+
+      <!-- AI WRITE TAB -->
+      <div class="admin-section" id="tab-ai-write">
+        <div class="admin-section-title">🤖 Trợ lý AI – DHT Assistant</div>
+        <p class="dht-s41">AI hỗ trợ viết bài, quảng cáo, tóm tắt, dịch thuật và giải đáp thắc mắc cho trang web DHT.</p>
+        <div class="ai-tab-wrap">
+          <div class="ai-mode-btns">
+            <button class="ai-mode-btn active" onclick="setAiMode('write',this)">✍️ Viết bài</button>
+            <button class="ai-mode-btn" onclick="setAiMode('ads',this)">📢 Quảng cáo</button>
+            <button class="ai-mode-btn" onclick="setAiMode('summary',this)">📋 Tóm tắt</button>
+            <button class="ai-mode-btn" onclick="setAiMode('seo',this)">🔍 SEO</button>
+            <button class="ai-mode-btn" onclick="setAiMode('translate',this)">🌐 Dịch thuật</button>
+            <button class="ai-mode-btn" onclick="setAiMode('qa',this)">💬 Giải đáp</button>
+          </div>
+          <div id="ai-mode-hint" class="dht-s42">
+            ✍️ Nhập chủ đề → AI sẽ viết bài hoàn chỉnh cho bạn
+          </div>
+          <div class="form-group">
+            <label class="form-label" id="ai-input-label">Chủ đề / Yêu cầu *</label>
+            <textarea class="admin-input" id="ai-prompt-input" placeholder="Ví dụ: Viết bài giới thiệu dịch vụ cho thuê sân pickleball của DHT..." class="dht-s43"></textarea>
+          </div>
+          <div class="dht-s44">
+            <button class="admin-btn primary" onclick="runAI()">✨ Tạo nội dung</button>
+            <div id="ai-tab-loading" class="dht-s45">
+              <span class="spin">⟳</span> Đang xử lý...
+            </div>
+          </div>
+          <div id="ai-tab-result" class="d-none">
+            <div class="admin-section-title mt-16">📄 Kết quả</div>
+            <div class="ai-result-box" id="ai-result-content">
+              <button class="copy-btn" onclick="copyAiResult()">📋 Sao chép</button>
+              <button class="insert-btn" onclick="insertAiToEditor()">➤ Chèn vào bài viết</button>
+              <div id="ai-result-text" class="dht-s46"></div>
+            </div>
+          </div>
+          <hr class="admin-divider">
+          <div class="admin-section-title">💬 Chat với AI</div>
+          <div class="dht-s47">
+            <div id="ai-tab-chat" class="dht-s48">
+              <div class="ai-msg bot">Xin chào! Tôi là DHT AI Assistant. Tôi có thể giúp bạn viết bài, tạo quảng cáo, tóm tắt nội dung, tối ưu SEO, dịch thuật và giải đáp mọi thắc mắc. Hãy hỏi tôi bất cứ điều gì! 🌊</div>
+            </div>
+            <div class="dht-s49">
+              <input class="admin-input" id="ai-chat-input" placeholder="Nhập câu hỏi..." class="dht-s50" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAiChat();}">
+              <button class="admin-btn primary" onclick="sendAiChat()" class="dht-s51">Gửi ↗</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- SOFTWARE MANAGEMENT -->
       <div class="admin-section" id="tab-software">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
-          <div class="admin-section-title" style="margin:0">📦 Quản lý Phần mềm & Ứng dụng</div>
+        <div class="d-flex align-center justify-between mb-20">
+          <div class="admin-section-title dht-s18">📦 Quản lý Phần mềm & Ứng dụng</div>
           <button class="admin-btn primary" onclick="showSwForm()">+ Thêm phần mềm</button>
         </div>
 
         <!-- Add/Edit form -->
-        <div id="sw-form" style="display:none;background:rgba(255,255,255,.03);border:1px solid #30363d;border-radius:12px;padding:20px;margin-bottom:20px;">
+        <div id="sw-form" class="dht-s52">
           <div class="admin-section-title">➕ Thêm / Cập nhật phần mềm</div>
           <div class="form-row">
-            <div class="form-group"><label class="form-label">Tên phần mềm *</label><input class="admin-input" id="sw-name" placeholder="DHT Manager App" style="width:100%"></div>
+            <div class="form-group"><label class="form-label">Tên phần mềm *</label><input class="admin-input" id="sw-name" placeholder="DHT Manager App" class="w-100"></div>
             <div class="form-group"><label class="form-label">Nền tảng</label>
-              <select class="admin-input" id="sw-platform" style="width:100%">
+              <select class="admin-input" id="sw-platform" class="w-100">
                 <option>Android (APK)</option><option>iOS (IPA)</option><option>Windows (EXE)</option><option>macOS (DMG)</option><option>Linux (AppImage)</option><option>Web App (ZIP)</option><option>Cross-platform (ZIP)</option>
               </select>
             </div>
           </div>
           <div class="form-row">
-            <div class="form-group"><label class="form-label">Phiên bản *</label><input class="admin-input" id="sw-version" placeholder="1.0.0" style="width:100%"></div>
-            <div class="form-group"><label class="form-label">Kích thước file</label><input class="admin-input" id="sw-size" placeholder="25.4 MB" style="width:100%"></div>
+            <div class="form-group"><label class="form-label">Phiên bản *</label><input class="admin-input" id="sw-version" placeholder="1.0.0" class="w-100"></div>
+            <div class="form-group"><label class="form-label">Kích thước file</label><input class="admin-input" id="sw-size" placeholder="25.4 MB" class="w-100"></div>
           </div>
           <div class="form-group"><label class="form-label">Ghi chú cập nhật (Changelog)</label>
-            <textarea class="admin-input" id="sw-notes" placeholder="- Sửa lỗi đăng nhập&#10;- Cải thiện hiệu suất&#10;- Thêm tính năng mới…" style="min-height:90px;width:100%;"></textarea>
+            <textarea class="admin-input" id="sw-notes" placeholder="- Sửa lỗi đăng nhập&#10;- Cải thiện hiệu suất&#10;- Thêm tính năng mới…" class="dht-s53"></textarea>
           </div>
           <div class="form-group"><label class="form-label">Tải lên file phần mềm</label>
-            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+            <div class="dht-s54">
               <button class="admin-btn secondary" onclick="document.getElementById('sw-file-input').click()">📂 Chọn file</button>
-              <span id="sw-file-name" style="font-size:13px;color:#8b949e;">Chưa chọn file</span>
-              <input type="file" id="sw-file-input" style="display:none" onchange="handleSwFile(this)">
+              <span id="sw-file-name" class="fs-13 text-silver">Chưa chọn file</span>
+              <input type="file" id="sw-file-input" class="d-none" onchange="handleSwFile(this)">
             </div>
           </div>
-          <div style="display:flex;gap:10px;margin-top:4px;">
+          <div class="dht-s55">
             <button class="admin-btn primary" onclick="saveSoftware()">💾 Lưu phần mềm</button>
             <button class="admin-btn secondary" onclick="document.getElementById('sw-form').style.display='none'">Hủy</button>
           </div>
@@ -920,18 +1273,18 @@ select.admin-input{cursor:pointer;}
         <!-- Download section -->
         <hr class="admin-divider">
         <div class="admin-section-title">⬇️ Tải xuống phần mềm</div>
-        <div id="sw-download-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+        <div id="sw-download-list" class="d-flex flex-col gap-10"></div>
       </div>
 
       <!-- USER MANAGEMENT -->
       <div class="admin-section" id="tab-users">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
-          <div class="admin-section-title" style="margin:0">👥 Phân quyền & Quản lý Users</div>
+        <div class="d-flex align-center justify-between mb-20">
+          <div class="admin-section-title dht-s18">👥 Phân quyền & Quản lý Users</div>
           <button class="admin-btn primary" onclick="showUserForm()">+ Thêm người dùng</button>
         </div>
 
         <!-- Role legend -->
-        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;">
+        <div class="dht-s56">
           <span class="role-badge role-super">👑 Super Admin – Toàn quyền</span>
           <span class="role-badge role-admin">⚙️ Admin – Quản lý nội dung & cài đặt</span>
           <span class="role-badge role-editor">✏️ Editor – Đăng & chỉnh sửa bài</span>
@@ -939,16 +1292,16 @@ select.admin-input{cursor:pointer;}
         </div>
 
         <!-- Add/Edit user form -->
-        <div id="user-form" style="display:none;background:rgba(255,255,255,.03);border:1px solid #30363d;border-radius:12px;padding:20px;margin-bottom:20px;">
+        <div id="user-form" class="dht-s52">
           <div class="admin-section-title" id="user-form-title">➕ Thêm người dùng mới</div>
           <div class="form-row">
-            <div class="form-group"><label class="form-label">Họ và tên *</label><input class="admin-input" id="u-name" placeholder="Nguyễn Văn A" style="width:100%"></div>
-            <div class="form-group"><label class="form-label">Tên đăng nhập *</label><input class="admin-input" id="u-username" placeholder="nguyenvana" style="width:100%"></div>
+            <div class="form-group"><label class="form-label">Họ và tên *</label><input class="admin-input" id="u-name" placeholder="Nguyễn Văn A" class="w-100"></div>
+            <div class="form-group"><label class="form-label">Tên đăng nhập *</label><input class="admin-input" id="u-username" placeholder="nguyenvana" class="w-100"></div>
           </div>
           <div class="form-row">
-            <div class="form-group"><label class="form-label">Mật khẩu *</label><input class="admin-input" type="password" id="u-password" placeholder="••••••••" style="width:100%"></div>
+            <div class="form-group"><label class="form-label">Mật khẩu *</label><input class="admin-input" type="password" id="u-password" placeholder="••••••••" class="w-100"></div>
             <div class="form-group"><label class="form-label">Vai trò</label>
-              <select class="admin-input" id="u-role" style="width:100%">
+              <select class="admin-input" id="u-role" class="w-100">
                 <option value="super">👑 Super Admin</option>
                 <option value="admin">⚙️ Admin</option>
                 <option value="editor" selected>✏️ Editor</option>
@@ -956,26 +1309,26 @@ select.admin-input{cursor:pointer;}
               </select>
             </div>
           </div>
-          <div class="form-group"><label class="form-label">Email</label><input class="admin-input" id="u-email" placeholder="email@dht-v.io.vn" style="width:100%;"></div>
-          <div style="display:flex;gap:10px;margin-top:8px;">
+          <div class="form-group"><label class="form-label">Email</label><input class="admin-input" id="u-email" placeholder="email@dht-v.io.vn" class="dht-s57"></div>
+          <div class="d-flex gap-10 mt-8">
             <button class="admin-btn primary" onclick="saveUser()">💾 Lưu</button>
             <button class="admin-btn secondary" onclick="document.getElementById('user-form').style.display='none'">Hủy</button>
           </div>
         </div>
 
         <!-- Permission table -->
-        <div style="overflow-x:auto;margin-bottom:24px;">
+        <div class="overflow-x-auto mb-24">
           <table class="admin-table">
-            <thead><tr><th>Tính năng</th><th style="text-align:center">👑 Super</th><th style="text-align:center">⚙️ Admin</th><th style="text-align:center">✏️ Editor</th><th style="text-align:center">👁 Viewer</th></tr></thead>
+            <thead><tr><th>Tính năng</th><th class="text-center">👑 Super</th><th class="text-center">⚙️ Admin</th><th class="text-center">✏️ Editor</th><th class="text-center">👁 Viewer</th></tr></thead>
             <tbody>
-              <tr><td>Xem tổng quan</td><td style="text-align:center;color:#3fb950">✓</td><td style="text-align:center;color:#3fb950">✓</td><td style="text-align:center;color:#3fb950">✓</td><td style="text-align:center;color:#3fb950">✓</td></tr>
-              <tr><td>Đăng & sửa bài viết</td><td style="text-align:center;color:#3fb950">✓</td><td style="text-align:center;color:#3fb950">✓</td><td style="text-align:center;color:#3fb950">✓</td><td style="text-align:center;color:#f85149">✗</td></tr>
-              <tr><td>Xóa bài viết</td><td style="text-align:center;color:#3fb950">✓</td><td style="text-align:center;color:#3fb950">✓</td><td style="text-align:center;color:#f85149">✗</td><td style="text-align:center;color:#f85149">✗</td></tr>
-              <tr><td>Tải lên / Tải xuống media</td><td style="text-align:center;color:#3fb950">✓</td><td style="text-align:center;color:#3fb950">✓</td><td style="text-align:center;color:#f85149">✗</td><td style="text-align:center;color:#f85149">✗</td></tr>
-              <tr><td>Quản lý phần mềm</td><td style="text-align:center;color:#3fb950">✓</td><td style="text-align:center;color:#3fb950">✓</td><td style="text-align:center;color:#f85149">✗</td><td style="text-align:center;color:#f85149">✗</td></tr>
-              <tr><td>Cài đặt trang web</td><td style="text-align:center;color:#3fb950">✓</td><td style="text-align:center;color:#3fb950">✓</td><td style="text-align:center;color:#f85149">✗</td><td style="text-align:center;color:#f85149">✗</td></tr>
-              <tr><td>Quản lý Users & phân quyền</td><td style="text-align:center;color:#3fb950">✓</td><td style="text-align:center;color:#f85149">✗</td><td style="text-align:center;color:#f85149">✗</td><td style="text-align:center;color:#f85149">✗</td></tr>
-              <tr><td>Xuất / Nhập dữ liệu</td><td style="text-align:center;color:#3fb950">✓</td><td style="text-align:center;color:#3fb950">✓</td><td style="text-align:center;color:#f85149">✗</td><td style="text-align:center;color:#f85149">✗</td></tr>
+              <tr><td>Xem tổng quan</td><td class="dht-s58">✓</td><td class="dht-s58">✓</td><td class="dht-s58">✓</td><td class="dht-s58">✓</td></tr>
+              <tr><td>Đăng & sửa bài viết</td><td class="dht-s58">✓</td><td class="dht-s58">✓</td><td class="dht-s58">✓</td><td class="dht-s59">✗</td></tr>
+              <tr><td>Xóa bài viết</td><td class="dht-s58">✓</td><td class="dht-s58">✓</td><td class="dht-s59">✗</td><td class="dht-s59">✗</td></tr>
+              <tr><td>Tải lên / Tải xuống media</td><td class="dht-s58">✓</td><td class="dht-s58">✓</td><td class="dht-s59">✗</td><td class="dht-s59">✗</td></tr>
+              <tr><td>Quản lý phần mềm</td><td class="dht-s58">✓</td><td class="dht-s58">✓</td><td class="dht-s59">✗</td><td class="dht-s59">✗</td></tr>
+              <tr><td>Cài đặt trang web</td><td class="dht-s58">✓</td><td class="dht-s58">✓</td><td class="dht-s59">✗</td><td class="dht-s59">✗</td></tr>
+              <tr><td>Quản lý Users & phân quyền</td><td class="dht-s58">✓</td><td class="dht-s59">✗</td><td class="dht-s59">✗</td><td class="dht-s59">✗</td></tr>
+              <tr><td>Xuất / Nhập dữ liệu</td><td class="dht-s58">✓</td><td class="dht-s58">✓</td><td class="dht-s59">✗</td><td class="dht-s59">✗</td></tr>
             </tbody>
           </table>
         </div>
@@ -991,6 +1344,34 @@ select.admin-input{cursor:pointer;}
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
+
+<!-- AI FLOATING BUTTON -->
+<button class="ai-fab" onclick="toggleAiPanel()" title="Trợ lý AI DHT">🤖</button>
+<div class="ai-panel" id="aiPanel">
+  <div class="ai-header">
+    <div class="ai-header-icon">🤖</div>
+    <div>
+      <div class="ai-header-title">DHT AI Assistant</div>
+      <div class="ai-header-sub">Trợ lý thông minh 24/7</div>
+    </div>
+    <button class="ai-close-btn" onclick="toggleAiPanel()">✕</button>
+  </div>
+  <div class="ai-messages" id="ai-fab-messages">
+    <div class="ai-msg bot">Xin chào! Tôi có thể giúp gì cho bạn về DHT? 🌊</div>
+  </div>
+  <div class="ai-shortcuts">
+    <div class="ai-chip" onclick="fabAsk('Giới thiệu các dịch vụ của DHT')">📋 Dịch vụ</div>
+    <div class="ai-chip" onclick="fabAsk('Liên hệ DHT như thế nào?')">📞 Liên hệ</div>
+    <div class="ai-chip" onclick="fabAsk('DHT có các dự án nổi bật nào?')">🏆 Dự án</div>
+    <div class="ai-chip" onclick="fabAsk('Chi phí thuê sân thể thao tại DHT?')">⚽ Sân thể thao</div>
+  </div>
+  <div class="ai-input-row">
+    <textarea class="ai-input" id="ai-fab-input" placeholder="Nhập câu hỏi…" rows="1"
+      onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendFabAI();}"></textarea>
+    <button class="ai-send" onclick="sendFabAI()">➤</button>
+  </div>
+</div>
+
 
 <script>
 // ─── LOGO BASE64 ───
@@ -1029,10 +1410,10 @@ function removeBg(src, callback) {
 
 function applyLogo(src) {
   ['nav-logo-img','hero-logo-img','phone-logo-img','footer-logo-img','settings-logo-preview'].forEach(function(id) {
-    var el = document.getElementById(id);
+    let el = document.getElementById(id);
     if (el) el.src = src;
   });
-  var loginEl = document.getElementById('login-logo');
+  let loginEl = document.getElementById('login-logo');
   if (loginEl) loginEl.src = src;
 }
 
@@ -1110,16 +1491,17 @@ let currentUser = JSON.parse(sessionStorage.getItem('dht_current_user') || 'null
 // ─── ADMIN OPEN/CLOSE ───
 function openAdmin() {
   if (!currentUser) {
-    var lo = document.getElementById('loginOverlay');
+    let lo = document.getElementById('loginOverlay');
     lo.style.display = 'flex';
     setTimeout(function() {
-      var u = document.getElementById('login-user');
+      let u = document.getElementById('login-user');
       if (u) u.focus();
     }, 100);
   } else {
     document.getElementById('adminOverlay').classList.add('open');
     applyPermissions();
     updateUserBar();
+    loadSettingsForm();
   }
 }
 function closeAdmin() { document.getElementById('adminOverlay').classList.remove('open'); }
@@ -1182,6 +1564,7 @@ function switchTab(id, el) {
   if (id === 'dashboard') updateDashboard();
   if (id === 'software') renderSoftware();
   if (id === 'users') renderUserList();
+  if (id === 'settings') loadSettingsForm();
 }
 
 // ─── EDITOR ───
@@ -1250,7 +1633,14 @@ function previewPost() {
   const title = document.getElementById('post-title').value || 'Tiêu đề';
   const content = document.getElementById('editor-content').innerHTML;
   const w = window.open('', '_blank');
-  w.document.write('<html><head><meta charset="UTF-8"><title>' + title + '</title><style>body{font-family:sans-serif;max-width:760px;margin:40px auto;padding:0 20px;line-height:1.8;color:#222}h1{margin-bottom:8px}</style></head><body><h1>' + title + '</h1><hr><div>' + content + '</div></body></html>');
+  if (!w) return;
+  const doc = w.document;
+  doc.open();
+  doc.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + title + '</title></head><body>');
+  doc.write('<style>body{font-family:sans-serif;max-width:760px;margin:40px auto;padding:0 20px;line-height:1.8;color:#222}h1{margin-bottom:8px}</style>');
+  doc.write('<h1>' + title + '</h1><hr><div>' + content + '</div>');
+  doc.write('</body></html>');
+  doc.close();
 }
 function renderPostList() {
   const search = (document.getElementById('search-posts').value || '').toLowerCase();
@@ -1259,7 +1649,7 @@ function renderPostList() {
   const tbody = document.getElementById('post-list-body');
   if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="5" style="color:#484f58;text-align:center;padding:20px">Không có bài viết</td></tr>'; return; }
   tbody.innerHTML = filtered.map(function(p) {
-    return '<tr><td><span style="margin-right:6px">' + p.icon + '</span>' + p.title + '</td><td><span style="color:#00b4d8;font-size:12px">' + p.category + '</span></td><td><span class="badge ' + p.status + '">' + (p.status === 'published' ? 'Xuất bản' : 'Nháp') + '</span></td><td style="color:#484f58;font-size:12px">' + p.date + '</td><td><div class="actions"><button class="admin-btn secondary" style="padding:5px 10px;font-size:12px" onclick="editPost(' + p.id + ')">✏️</button><button class="admin-btn secondary" style="padding:5px 10px;font-size:12px" onclick="toggleStatus(' + p.id + ')">' + (p.status==='published'?'⏸':'▶') + '</button><button class="admin-btn danger" style="padding:5px 10px;font-size:12px" onclick="deletePost(' + p.id + ')">🗑</button></div></td></tr>';
+    return '<tr><td><span style="margin-right:6px">' + p.icon + '</span>' + p.title + '</td><td><span style="color:#00b4d8;font-size:12px">' + p.category + '</span></td><td><span class="badge ' + p.status + '">' + (p.status === 'published' ? 'Xuất bản' : 'Nháp') + '</span></td><td style="color:#484f58;font-size:12px">' + p.date + '</td><td><div class="actions"><button class="admin-btn secondary btn-sm" onclick="editPost(' + p.id + ')">✏️</button><button class="admin-btn secondary btn-sm" onclick="toggleStatus(' + p.id + ')">' + (p.status==='published'?'⏸':'▶') + '</button><button class="admin-btn danger btn-sm" onclick="deletePost(' + p.id + ')">🗑</button></div></td></tr>';
   }).join('');
 }
 function renderNews() {
@@ -1274,7 +1664,18 @@ function openArticle(id) {
   const p = posts.find(function(x) { return x.id === id; });
   if (!p) return;
   const w = window.open('', '_blank');
-  w.document.write('<html><head><meta charset="UTF-8"><title>' + p.title + '</title><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Be+Vietnam+Pro:wght@300;400;500&display=swap" rel="stylesheet"><style>*{margin:0;padding:0;box-sizing:border-box}body{background:#020b18;color:#d4eaf7;font-family:Be Vietnam Pro,sans-serif;padding:40px 20px}article{max-width:780px;margin:0 auto}.cat{display:inline-block;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#00b4d8;margin-bottom:16px}h1{font-family:Playfair Display,serif;font-size:clamp(28px,5vw,48px);margin-bottom:16px}.meta{font-size:13px;color:#7fb3d3;margin-bottom:32px;padding-bottom:24px;border-bottom:1px solid rgba(255,255,255,.08)}.content{font-size:16px;line-height:1.9;color:#a8c6e0}</style></head><body><article><div class="cat">' + p.category + '</div><h1>' + p.title + '</h1><div class="meta">📅 ' + p.date + ' | DHT-V.io.vn</div><div class="content">' + p.content + '</div></article></body></html>');
+  const d2 = w.document; d2.open();
+  d2.write('<!DOCTYPE html><html lang="vi"><head><meta charset="UTF-8"><title>' + p.title + '</title>');
+  d2.write('<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Be+Vietnam+Pro:wght@300;400;500&display=swap">');
+  d2.write('<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#020b18;color:#d4eaf7;font-family:"Be Vietnam Pro",sans-serif;padding:40px 20px}article{max-width:780px;margin:0 auto}.cat{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#00b4d8;margin-bottom:16px;display:inline-block}h1{font-family:"Playfair Display",serif;font-size:clamp(28px,5vw,48px);margin-bottom:16px}.meta{font-size:13px;color:#7fb3d3;margin-bottom:32px;padding-bottom:24px;border-bottom:1px solid rgba(255,255,255,.08)}.content{font-size:16px;line-height:1.9;color:#a8c6e0}</style></head><body><article>');
+  d2.write('<div class="cat">' + p.category + '</div><h1>' + p.title + '</h1>');
+  d2.write('<div class="meta">' + p.date + ' | DHT-V.io.vn</div>');
+  d2.write('<div class="content">' + p.content + '</div></article></body></html>');
+  d2.write('<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#020b18;color:#d4eaf7;font-family:sans-serif;padding:40px 20px}article{max-width:760px;margin:0 auto}.cat{font-size:11px;color:#00b4d8;display:inline-block;margin-bottom:12px}h1{font-size:36px;margin-bottom:14px}.meta{font-size:13px;color:#7fb3d3;margin-bottom:28px}.content{font-size:15px;line-height:1.9;color:#a8c6e0}</style></head><body><article>');
+  d2.write('<div class="cat">' + p.category + '</div><h1>' + p.title + '</h1>');
+  d2.write('<div class="meta">' + p.date + ' | DHT-V.io.vn</div>');
+  d2.write('<div class="content">' + p.content + '</div></article></body></html>');
+  d2.close();
 }
 function updateDashboard() {
   const pub = posts.filter(function(p) { return p.status === 'published'; }).length;
@@ -1313,7 +1714,7 @@ function renderFileList() {
   if (!mediaFiles.length) { list.innerHTML = ''; return; }
   list.innerHTML = mediaFiles.map(function(f) {
     const fid = String(f.id);
-    return '<div class="file-item"><span>' + (f.type&&f.type.startsWith('image/')?'🖼️':f.type&&f.type.includes('pdf')?'📄':'📁') + ' ' + f.name + '</span><span class="file-meta">' + f.size + ' · ' + f.date + '</span>' + (f.url ? '<button class="admin-btn success" style="padding:4px 10px;font-size:11px" onclick="downloadFile(' + JSON.stringify(fid) + ')">⬇️</button>' : '') + '<button class="admin-btn danger" style="padding:4px 10px;font-size:11px" onclick="removeFile(' + JSON.stringify(fid) + ')">🗑</button></div>';
+    return '<div class="file-item"><span>' + (f.type&&f.type.startsWith('image/')?'🖼️':f.type&&f.type.includes('pdf')?'📄':'📁') + ' ' + f.name + '</span><span class="file-meta">' + f.size + ' · ' + f.date + '</span>' + (f.url ? '<button class="admin-btn success btn-xs" onclick="downloadFile(' + JSON.stringify(fid) + ')">⬇️</button>' : '') + '<button class="admin-btn danger btn-xs" onclick="removeFile(' + JSON.stringify(fid) + ')">🗑</button></div>';
   }).join('');
 }
 function removeFile(id) { mediaFiles = mediaFiles.filter(function(f) { return f.id != id; }); localStorage.setItem('dht_media', JSON.stringify(mediaFiles)); renderFileList(); updateDashboard(); toast('Đã xóa tệp','ok'); }
@@ -1402,14 +1803,14 @@ function renderSoftware() {
     if (dlList) dlList.innerHTML = ''; return;
   }
   list.innerHTML = softwareList.map(function(sw) {
-    return '<div class="sw-card"><div class="sw-icon">' + (platformIcon[sw.platform]||'📦') + '</div><div class="sw-info"><div class="sw-name">' + sw.name + ' <span class="version-badge' + (sw.isLatest?' latest-badge':'') + '">' + sw.version + (sw.isLatest?' ✓':'') + '</span></div><div class="sw-meta">' + sw.platform + ' · ' + (sw.size||'—') + ' · ' + sw.updatedAt + '</div>' + (sw.notes?'<div style="font-size:12px;color:#8b949e;margin-top:6px;white-space:pre-line">' + sw.notes.substring(0,120) + '</div>':'') + '</div><div class="sw-actions"><button class="admin-btn success" style="padding:7px 12px;font-size:12px" onclick="downloadSw(' + sw.id + ')">⬇️ Tải</button>' + (canAdmin?'<button class="admin-btn secondary" style="padding:7px 12px;font-size:12px" onclick="showSwForm(' + sw.id + ')">✏️</button><button class="admin-btn danger" style="padding:7px 12px;font-size:12px" onclick="deleteSw(' + sw.id + ')">🗑</button>':'') + '</div></div>';
+    return '<div class="sw-card"><div class="sw-icon">' + (platformIcon[sw.platform]||'📦') + '</div><div class="sw-info"><div class="sw-name">' + sw.name + ' <span class="version-badge' + (sw.isLatest?' latest-badge':'') + '">' + sw.version + (sw.isLatest?' ✓':'') + '</span></div><div class="sw-meta">' + sw.platform + ' · ' + (sw.size||'—') + ' · ' + sw.updatedAt + '</div>' + (sw.notes?'<div style="font-size:12px;color:#8b949e;margin-top:6px;white-space:pre-line">' + sw.notes.substring(0,120) + '</div>':'') + '</div><div class="sw-actions"><button class="admin-btn success btn-table" onclick="downloadSw(' + sw.id + ')">⬇️ Tải</button>' + (canAdmin?'<button class="admin-btn secondary btn-table" onclick="showSwForm(' + sw.id + ')">✏️</button><button class="admin-btn danger btn-table" onclick="deleteSw(' + sw.id + ')">🗑</button>':'') + '</div></div>';
   }).join('');
   if (dlList) {
     const byName = {};
     softwareList.forEach(function(sw) { if (!byName[sw.name]) byName[sw.name]=[]; byName[sw.name].push(sw); });
     dlList.innerHTML = Object.entries(byName).map(function(entry) {
       const name=entry[0], versions=entry[1];
-      return '<div style="background:rgba(255,255,255,.03);border:1px solid #30363d;border-radius:12px;padding:16px 20px;"><div style="font-weight:600;color:#e6edf3;margin-bottom:10px;">' + (platformIcon[versions[0].platform]||'📦') + ' ' + name + '</div><div style="display:flex;gap:8px;flex-wrap:wrap;">' + versions.map(function(v) { return '<button class="admin-btn success" style="font-size:12px" onclick="downloadSw(' + v.id + ')">⬇️ v' + v.version + (v.isLatest?' (Mới nhất)':'') + '</button>'; }).join('') + '</div></div>';
+      return '<div style="background:rgba(255,255,255,.03);border:1px solid #30363d;border-radius:12px;padding:16px 20px;"><div style="font-weight:600;color:#e6edf3;margin-bottom:10px;">' + (platformIcon[versions[0].platform]||'📦') + ' ' + name + '</div><div class="d-flex gap-8 flex-wrap">' + versions.map(function(v) { return '<button class="admin-btn success" style="font-size:12px" onclick="downloadSw(' + v.id + ')">⬇️ v' + v.version + (v.isLatest?' (Mới nhất)':'') + '</button>'; }).join('') + '</div></div>';
     }).join('');
   }
 }
@@ -1480,7 +1881,7 @@ function renderUserList() {
   if (!el) return;
   const canSuper = currentUser && currentUser.role === 'super';
   el.innerHTML = users.map(function(u) {
-    return '<div class="user-card"><div class="user-avatar" style="background:' + (u.color||'#484f58') + ';color:#fff">' + (u.avatar||u.name[0]) + '</div><div class="user-info"><div class="user-name">' + u.name + (currentUser&&u.id===currentUser.id?' <span style="font-size:11px;color:#00b4d8">(bạn)</span>':'') + '</div><div class="user-meta">@' + u.username + ' · ' + (u.email||'—') + ' · ' + u.created + '</div></div><span class="role-badge ' + (roleCls[u.role]||'') + '">' + (roleLabel2[u.role]||u.role) + '</span>' + (canSuper?'<div class="user-actions"><button class="admin-btn secondary" style="padding:6px 10px;font-size:12px" onclick="showUserForm(' + u.id + ')">✏️</button><button class="admin-btn secondary" style="padding:6px 10px;font-size:12px" onclick="resetPassword(' + u.id + ')">🔑</button>' + (u.id!==1&&(!currentUser||u.id!==currentUser.id)?'<button class="admin-btn danger" style="padding:6px 10px;font-size:12px" onclick="deleteUser(' + u.id + ')">🗑</button>':'') + '</div>':'') + '</div>';
+    return '<div class="user-card"><div class="user-avatar" style="background:' + (u.color||'#484f58') + ';color:#fff">' + (u.avatar||u.name[0]) + '</div><div class="user-info"><div class="user-name">' + u.name + (currentUser&&u.id===currentUser.id?' <span class="fs-11 text-cyan">(bạn)</span>':'') + '</div><div class="user-meta">@' + u.username + ' · ' + (u.email||'—') + ' · ' + u.created + '</div></div><span class="role-badge ' + (roleCls[u.role]||'') + '">' + (roleLabel2[u.role]||u.role) + '</span>' + (canSuper?'<div class="user-actions"><button class="admin-btn secondary btn-md" onclick="showUserForm(' + u.id + ')">✏️</button><button class="admin-btn secondary btn-md" onclick="resetPassword(' + u.id + ')">🔑</button>' + (u.id!==1&&(!currentUser||u.id!==currentUser.id)?'<button class="admin-btn danger btn-md" onclick="deleteUser(' + u.id + ')">🗑</button>':'') + '</div>':'') + '</div>';
   }).join('');
 }
 
@@ -1506,6 +1907,79 @@ function saveSettings(silent) {
   }
   if (!silent) toast('✅ Đã lưu cài đặt!','ok');
 }
+function loadSettingsForm() {
+  let s = settings;
+  let fields = {
+    'set-company': s.company || 'Công ty Cổ phần Dịch vụ Tổng hợp DHT',
+    'set-domain': s.domain || 'dht-v.io.vn',
+    'set-phone': s.phone || '(024) 1234 5678',
+    'set-email': s.email || 'info@dht-v.io.vn',
+    'set-address': s.address || 'Hà Nội, Việt Nam',
+    'set-slogan': s.slogan || 'Tầm nơi biển lớn – Giương buồm ra khơi',
+    'stat-years': s.stats ? s.stats.years : 15,
+    'stat-projects': s.stats ? s.stats.projects : 120,
+    'stat-clients': s.stats ? s.stats.clients : 500,
+    'stat-partners': s.stats ? s.stats.partners : 50
+  };
+  Object.keys(fields).forEach(function(id) {
+    let el = document.getElementById(id);
+    if (el) el.value = fields[id];
+  });
+  // Load API key (masked)
+  let apiKeyEl = document.getElementById('set-api-key');
+  let savedKey = localStorage.getItem('dht_gemini_key') || '';
+  if (apiKeyEl && savedKey) apiKeyEl.value = savedKey;
+}
+
+function saveApiKey() {
+  let keyEl = document.getElementById('set-api-key');
+  if (!keyEl) return;
+  let key = keyEl.value.trim();
+  if (!key) { toast('Vui lòng nhập Gemini API key!', 'err'); return; }
+  if (!key.startsWith('AIza')) { toast('Key không đúng định dạng Gemini (phải bắt đầu bằng AIza...)', 'err'); return; }
+  localStorage.setItem('dht_gemini_key', key);
+  toast('✅ Đã lưu Gemini API key!', 'ok');
+}
+
+function toggleApiKeyVisibility() {
+  let el = document.getElementById('set-api-key');
+  if (!el) return;
+  el.type = el.type === 'password' ? 'text' : 'password';
+}
+
+async function testAI() {
+  let resultEl = document.getElementById('ai-test-result');
+  let key = localStorage.getItem('dht_gemini_key') || '';
+  if (!key) { resultEl.innerHTML = '<span style="color:#f85149">❌ Chưa có Gemini API key. Nhập và lưu key trước.</span>'; return; }
+  resultEl.innerHTML = '<span style="color:#00b4d8">⟳ Đang kiểm tra kết nối Gemini...</span>';
+  try {
+    let res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=' + key, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        contents: [{ role:'user', parts:[{ text: 'Reply with exactly: OK DHT' }] }],
+        generationConfig: { maxOutputTokens: 20 }
+      })
+    });
+    if (!res.ok) {
+      let errData = await res.json();
+      resultEl.innerHTML = '<span class="text-danger">❌ HTTP ' + res.status + ': ' + (errData.error ? errData.error.message : 'Lỗi không xác định') + '</span>';
+      return;
+    }
+    let data = await res.json();
+    if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) {
+      let reply = data.candidates[0].content.parts[0].text;
+      resultEl.innerHTML = '<span class="text-success">✅ Gemini kết nối thành công! Model: gemini-2.5-flash-lite. Phản hồi: ' + reply.substring(0,50) + '</span>';
+    } else if (data.error) {
+      resultEl.innerHTML = '<span class="text-danger">❌ Lỗi: ' + (data.error.message||'Không xác định') + '</span>';
+    } else {
+      resultEl.innerHTML = '<span class="text-warn">⚠️ Phản hồi không đúng định dạng: ' + JSON.stringify(data).substring(0,100) + '</span>';
+    }
+  } catch(e) {
+    resultEl.innerHTML = '<span style="color:#f85149">❌ Lỗi: ' + e.message + '</span>';
+  }
+}
+
 function handleLogoUpload(input) {
   const f = input.files[0]; if (!f) return;
   const r = new FileReader();
@@ -1655,7 +2129,7 @@ function renderDdApps() {
   if (!filtered.length) { el.innerHTML = '<div class="dd-empty">📭 Không có ứng dụng trong mục này</div>'; return; }
   const pIcons = {'Android (APK)':'🤖','iOS (IPA)':'🍎','Windows (EXE)':'🪟','macOS (DMG)':'🍏','Linux (AppImage)':'🐧','Web App (ZIP)':'🌐','Cross-platform (ZIP)':'📦'};
   el.innerHTML = filtered.map(function(sw) {
-    var h='<div class="dd-item" onclick="scrollTo2(\u0022tai-ve\u0022);closeDropdowns()">';
+    let h='<div class="dd-item" onclick="scrollTo2(\u0022tai-ve\u0022);closeDropdowns()">';
     h+='<div class="dd-item-icon">'+(pIcons[sw.platform]||'📦')+'</div>';
     h+='<div class="dd-item-body"><div class="dd-item-title">'+sw.name+'</div>';
     h+='<div class="dd-item-meta">'+sw.platform+' · v'+sw.version+' · '+sw.date+'</div></div>';
@@ -1739,6 +2213,368 @@ function changePassword() {
   document.getElementById('pw-strength').textContent = '';
   toast('✅ Đã đổi mật khẩu thành công!','ok');
 }
+
+
+// ─── POST MEDIA (images/videos in post) ───
+let postMediaList = []; // [{type,src,name}]
+
+function handleCover(input) {
+  const f = input.files[0]; if (!f) return;
+  document.getElementById('cover-name').textContent = f.name;
+  const r = new FileReader();
+  r.onload = function(e) {
+    const prev = document.getElementById('cover-preview');
+    prev.src = e.target.result; prev.style.display = 'block';
+  };
+  r.readAsDataURL(f);
+}
+
+function handlePostMedia(files) {
+  Array.from(files).forEach(function(f) {
+    const r = new FileReader();
+    r.onload = function(e) {
+      postMediaList.push({type: f.type.startsWith('video/') ? 'video' : 'img', src: e.target.result, name: f.name});
+      renderPostMedia();
+    };
+    r.readAsDataURL(f);
+  });
+}
+
+function renderPostMedia() {
+  const bar = document.getElementById('post-media-bar');
+  if (!bar) return;
+  // keep add button
+  let addBtn = '<div class="pm-add" onclick="document.getElementById(&quot;pm-input&quot;).click()" title="Thêm ảnh/video"><span>＋</span><span style="font-size:10px;margin-top:2px">Thêm</span></div>';
+  let html = addBtn;
+  postMediaList.forEach(function(m, i) {
+    if (m.type === 'video') {
+      html = '<div class="pm-thumb"><video src="' + m.src + '" style="width:100%;height:100%;object-fit:cover"></video><button class="pm-del" onclick="removePostMedia(' + i + ')">✕</button></div>' + html;
+    } else {
+      html = '<div class="pm-thumb"><img src="' + m.src + '" alt=""><button class="pm-del" onclick="removePostMedia(' + i + ')">✕</button></div>' + html;
+    }
+  });
+  bar.innerHTML = html;
+}
+
+function removePostMedia(idx) {
+  postMediaList.splice(idx, 1);
+  renderPostMedia();
+}
+
+function insertMediaToEditor() {
+  if (!postMediaList.length) { toast('Chưa có media nào trong bài!', 'err'); return; }
+  const m = postMediaList[postMediaList.length - 1];
+  const editor = document.getElementById('editor-content');
+  if (m.type === 'video') {
+    editor.innerHTML += '<video src="' + m.src + '" controls style="max-width:100%;border-radius:8px;margin:8px 0"></video><p><br></p>';
+  } else {
+    editor.innerHTML += '<img src="' + m.src + '" style="max-width:100%;border-radius:8px;margin:8px 0"><p><br></p>';
+  }
+}
+
+function resetPostForm() {
+  editingId = null;
+  postMediaList = [];
+  renderPostMedia();
+  ['post-title','post-excerpt','post-icon'].forEach(function(id) { let el=document.getElementById(id); if(el) el.value=''; });
+  let ec = document.getElementById('editor-content'); if(ec) ec.innerHTML='';
+  let cp = document.getElementById('cover-preview'); if(cp){cp.style.display='none';cp.src='';}
+  let cn = document.getElementById('cover-name'); if(cn) cn.textContent='Chưa chọn';
+  let lbl = document.getElementById('post-form-label'); if(lbl) lbl.textContent='✏️ Tạo bài viết mới';
+  toast('Đã hủy chỉnh sửa','info');
+}
+
+// Override editPost to also set cover + media
+let _origEditPost = editPost;
+editPost = function(id) {
+  _origEditPost(id);
+  postMediaList = [];
+  renderPostMedia();
+  let lbl = document.getElementById('post-form-label');
+  if(lbl) lbl.textContent = '✏️ Chỉnh sửa bài viết';
+  const p = posts.find(function(x){return x.id===id;});
+  if(p && p.coverSrc) {
+    let cp = document.getElementById('cover-preview');
+    if(cp) { cp.src=p.coverSrc; cp.style.display='block'; }
+    let cn = document.getElementById('cover-name');
+    if(cn) cn.textContent = 'Ảnh bìa hiện tại';
+  }
+  if(p && p.mediaList) { postMediaList=p.mediaList; renderPostMedia(); }
+};
+
+// Override savePost to include cover + media
+let _origSavePost = savePost;
+savePost = function(forceStatus) {
+  // attach media before saving
+  let coverEl = document.getElementById('cover-preview');
+  if (coverEl && coverEl.src && coverEl.style.display !== 'none') {
+    window._pendingCover = coverEl.src;
+  }
+  window._pendingMedia = postMediaList.slice();
+  _origSavePost(forceStatus);
+};
+
+// Patch savePosts to include cover+media in post object
+let _patchApplied = false;
+if (!_patchApplied) {
+  _patchApplied = true;
+  let origSavePostInner = savePost;
+  // We inject cover/media directly via override of the post obj in savePost function
+  // Instead, patch after _origSavePost to add fields
+}
+
+// ─── EDIT/DELETE on news cards ───
+function renderNews() {
+  let grid = document.getElementById('news-grid');
+  let pub = posts.filter(function(p) { return p.status === 'published'; });
+  if (!pub.length) { grid.innerHTML = '<div class="news-empty">📰 Chưa có bài viết nào. Hãy đăng bài mới từ bảng quản trị!</div>'; return; }
+  let isAdmin = currentUser && (currentUser.role==='super'||currentUser.role==='admin'||currentUser.role==='editor');
+  grid.innerHTML = pub.map(function(p) {
+    let coverBg = p.coverSrc ? 'background:url(' + JSON.stringify(p.coverSrc) + ') center/cover' : 'font-size:52px;background:linear-gradient(135deg,#071e3d,#0a3460)';
+    let coverContent = p.coverSrc ? '' : p.icon;
+    return '<div class="news-card" onclick="openArticle(' + p.id + ')">' +
+      (isAdmin ? '<div class="news-card-actions" onclick="event.stopPropagation()">' +
+        '<button class="nc-btn edit" onclick="editNewsCard(' + p.id + ')">✏️ Sửa</button>' +
+        '<button class="nc-btn del" onclick="delNewsCard(' + p.id + ')">🗑 Xóa</button>' +
+      '</div>' : '') +
+      '<div class="news-img" style="height:200px;' + coverBg + '">' + coverContent + '<span class="news-cat">' + p.category + '</span></div>' +
+      '<div class="news-body"><div class="news-date">📅 ' + p.date + '</div>' +
+      '<div class="news-title">' + p.title + '</div>' +
+      '<div class="news-excerpt">' + p.excerpt + '</div></div></div>';
+  }).join('');
+}
+
+function editNewsCard(id) {
+  openAdmin();
+  setTimeout(function() {
+    switchTab('post-new', document.querySelector('[onclick*="post-new"]'));
+    editPost(id);
+  }, 300);
+}
+function delNewsCard(id) {
+  if (!confirm('Bạn có chắc muốn xóa bài viết này?')) return;
+  deletePost(id);
+  toast('🗑 Đã xóa bài viết', 'ok');
+}
+
+// ─── AI FLOATING PANEL ───
+let aiPanelOpen = false;
+function toggleAiPanel() {
+  aiPanelOpen = !aiPanelOpen;
+  document.getElementById('aiPanel').classList.toggle('open', aiPanelOpen);
+  if (aiPanelOpen) setTimeout(function(){ document.getElementById('ai-fab-input').focus(); }, 300);
+}
+function fabAsk(q) {
+  document.getElementById('ai-fab-input').value = q;
+  sendFabAI();
+}
+
+function appendFabMsg(text, role) {
+  let container = document.getElementById('ai-fab-messages');
+  let div = document.createElement('div');
+  div.className = 'ai-msg ' + role;
+  div.textContent = text;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+  return div;
+}
+
+async function sendFabAI() {
+  let input = document.getElementById('ai-fab-input');
+  let msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+  appendFabMsg(msg, 'user');
+  let thinking = appendFabMsg('Đang suy nghĩ...', 'bot thinking');
+
+  let systemPrompt = 'Bạn là DHT AI Assistant, trợ lý thông minh của Công ty Cổ phần Dịch vụ Tổng hợp DHT (dht-v.io.vn). ' +
+    'Công ty hoạt động trong 4 lĩnh vực: Dịch vụ Truyền thông, Thuê & Cho thuê Bất động sản, Sửa chữa Xây dựng & Khai thác Sân thể thao, Thiết kế & Gia công Phần mềm. ' +
+    'Slogan: "Tầm nơi biển lớn – Giương buồm ra khơi". Email: info@dht-v.io.vn. Hãy trả lời ngắn gọn, thân thiện và chuyên nghiệp bằng tiếng Việt.';
+
+  try {
+    let apiKey = localStorage.getItem('dht_gemini_key') || '';
+    if (!apiKey) {
+      thinking.className = 'ai-msg bot';
+      thinking.textContent = '⚙️ Chưa có API key. Vào Quản trị → Cài đặt → mục Cài đặt AI → nhập Gemini API key và lưu.';
+      return;
+    }
+    let fullMsg = systemPrompt + '\n\nCâu hỏi của người dùng: ' + msg;
+    let res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=' + apiKey, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: fullMsg }] }],
+        generationConfig: { temperature: 0.7, maxOutputTokens: 800 }
+      })
+    });
+    if (!res.ok) {
+      let errData = await res.json();
+      thinking.className = 'ai-msg bot';
+      thinking.textContent = '❌ Lỗi ' + res.status + ': ' + (errData.error ? errData.error.message : 'Không xác định');
+      return;
+    }
+    let data = await res.json();
+    let reply = (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0]) 
+      ? data.candidates[0].content.parts[0].text 
+      : '⚠️ Không có phản hồi từ AI.';
+    thinking.className = 'ai-msg bot';
+    thinking.textContent = reply;
+  } catch(e) {
+    thinking.className = 'ai-msg bot';
+    let apiKey = localStorage.getItem('dht_gemini_key');
+    if (!apiKey) {
+      thinking.textContent = '⚙️ Chưa cài Gemini API key. Vào Quản trị → Cài đặt → Cài đặt AI để nhập key.';
+    } else {
+      thinking.textContent = '❌ Lỗi kết nối AI: ' + e.message + '. Kiểm tra lại API key trong Cài đặt.';
+    }
+  }
+  document.getElementById('ai-fab-messages').scrollTop = 99999;
+}
+
+// ─── AI WRITE TAB ───
+let aiMode = 'write';
+let aiModeConfig = {
+  write: { hint: '✍️ Nhập chủ đề → AI sẽ viết bài hoàn chỉnh cho bạn', label: 'Chủ đề bài viết *', placeholder: 'Ví dụ: Giới thiệu dịch vụ cho thuê sân pickleball của DHT Sports Complex...' },
+  ads: { hint: '📢 Nhập sản phẩm/dịch vụ → AI tạo nội dung quảng cáo hấp dẫn', label: 'Sản phẩm / Dịch vụ cần quảng cáo *', placeholder: 'Ví dụ: Sân pickleball DHT, giá 150k/giờ, ở quận...' },
+  summary: { hint: '📋 Dán văn bản dài → AI tóm tắt ngắn gọn', label: 'Nội dung cần tóm tắt *', placeholder: 'Dán nội dung bài viết, hợp đồng, tài liệu cần tóm tắt...' },
+  seo: { hint: '🔍 Nhập từ khóa → AI tạo nội dung chuẩn SEO', label: 'Từ khóa SEO *', placeholder: 'Ví dụ: cho thuê sân bóng đá Hà Nội giá rẻ...' },
+  translate: { hint: '🌐 Nhập văn bản → AI dịch sang tiếng Anh', label: 'Văn bản cần dịch *', placeholder: 'Nhập nội dung tiếng Việt cần dịch...' },
+  qa: { hint: '💬 Hỏi bất cứ điều gì về DHT hoặc lĩnh vực hoạt động', label: 'Câu hỏi của bạn *', placeholder: 'Ví dụ: Cách lên kế hoạch marketing cho công ty dịch vụ...' }
+};
+
+function setAiMode(mode, btn) {
+  aiMode = mode;
+  document.querySelectorAll('.ai-mode-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  let cfg = aiModeConfig[mode];
+  let hintEl = document.getElementById('ai-mode-hint');
+  let labelEl = document.getElementById('ai-input-label');
+  let inputEl = document.getElementById('ai-prompt-input');
+  if(hintEl) hintEl.textContent = cfg.hint;
+  if(labelEl) labelEl.textContent = cfg.label;
+  if(inputEl) inputEl.placeholder = cfg.placeholder;
+  document.getElementById('ai-tab-result').style.display = 'none';
+}
+
+let aiTabHistory = [];
+async function sendAiChat() {
+  let input = document.getElementById('ai-chat-input');
+  let msg = input.value.trim(); if(!msg) return;
+  input.value = '';
+  let container = document.getElementById('ai-tab-chat');
+  let uDiv = document.createElement('div'); uDiv.className='ai-msg user'; uDiv.textContent=msg;
+  container.appendChild(uDiv);
+  let bDiv = document.createElement('div'); bDiv.className='ai-msg bot thinking'; bDiv.textContent='Đang suy nghĩ...';
+  container.appendChild(bDiv);
+  container.scrollTop=99999;
+  aiTabHistory.push({role:'user',content:msg});
+  try {
+    let apiKey = localStorage.getItem('dht_gemini_key') || '';
+    if (!apiKey) {
+      bDiv.className='ai-msg bot';
+      bDiv.textContent='⚙️ Chưa có API key. Vào Cài đặt → Cài đặt AI để nhập Gemini key.';
+      return;
+    }
+    let sysText = 'Ban la DHT AI Assistant chuyen nghiep cho DHT-V.io.vn. Tra loi bang tieng Viet.';
+    let geminiMsgs = aiTabHistory.map(function(m){
+      return {role: m.role==='assistant'?'model':'user', parts:[{text:m.content}]};
+    });
+    if (geminiMsgs.length > 0 && geminiMsgs[0].role === 'user') {
+      geminiMsgs[0].parts[0].text = sysText + '\n\n' + geminiMsgs[0].parts[0].text;
+    }
+    let res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=' + apiKey, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        contents: geminiMsgs,
+        generationConfig: { temperature: 0.7, maxOutputTokens: 800 }
+      })
+    });
+    if (!res.ok) {
+      let errData = await res.json();
+      bDiv.className='ai-msg bot';
+      bDiv.textContent='❌ Lỗi ' + res.status + ': ' + (errData.error ? errData.error.message : 'Không xác định');
+      return;
+    }
+    let data = await res.json();
+    let reply = (data.candidates&&data.candidates[0]&&data.candidates[0].content&&data.candidates[0].content.parts&&data.candidates[0].content.parts[0]) 
+      ? data.candidates[0].content.parts[0].text 
+      : '⚠️ Không có phản hồi.';
+    bDiv.className='ai-msg bot'; bDiv.textContent=reply;
+    aiTabHistory.push({role:'assistant',content:reply});
+  } catch(e) {
+    bDiv.className='ai-msg bot';
+    let apiKey2 = localStorage.getItem('dht_gemini_key');
+    bDiv.textContent = apiKey2 ? '❌ Lỗi: ' + e.message : '⚙️ Chưa cài Gemini key. Vào Cài đặt → Cài đặt AI để nhập key.';
+  }
+  container.scrollTop=99999;
+}
+
+let aiModePrompts = {
+  write: function(p){ return 'Hay viet mot bai dang hoan chinh cho trang web cong ty DHT ve chu de: "' + p + '". Bai viet can co tieu de hap dan, noi dung chuyen nghiep, khoang 300-400 tu, phu hop voi phong cach doanh nghiep. Viet bang tieng Viet.'; },
+  ads: function(p){ return 'Viet noi dung quang cao hap dan cho: "' + p + '". Can co: tieu de bat mat, 3 diem noi bat, call-to-action manh. Ngan gon, thuyet phuc, phu hop mang xa hoi. Tieng Viet.'; },
+  summary: function(p){ return 'Hay tom tat noi dung sau thanh 3-5 diem chinh ngan gon: ' + p; },
+  seo: function(p){ return 'Viet doan noi dung chuan SEO (150-200 tu) cho tu khoa: "' + p + '". Tich hop tu khoa tu nhien, de cap loi ich, de doc. Tieng Viet.'; },
+  translate: function(p){ return 'Dich noi dung sau sang tieng Anh chuan, chuyen nghiep: ' + p; },
+  qa: function(p){ return p + ' (Hay tra loi chi tiet, huu ich, bang tieng Viet)'; }
+};
+
+async function runAI() {
+  let prompt = document.getElementById('ai-prompt-input').value.trim();
+  if (!prompt) { toast('Vui lòng nhập nội dung!', 'err'); return; }
+  let loading = document.getElementById('ai-tab-loading');
+  let resultBox = document.getElementById('ai-tab-result');
+  let resultText = document.getElementById('ai-result-text');
+  loading.style.display = 'flex'; resultBox.style.display = 'none';
+  try {
+    let fullPrompt = aiModePrompts[aiMode](prompt);
+    let apiKey = localStorage.getItem('dht_gemini_key') || '';
+    if (!apiKey) {
+      toast('⚙️ Chưa có Gemini API key - vào Cài đặt để nhập key', 'err');
+      loading.style.display = 'none'; return;
+    }
+    let res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=' + apiKey, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        contents:[{role:'user',parts:[{text:'[Bạn là AI viết nội dung cho DHT-V.io.vn]\n\n' + fullPrompt}]}],
+        generationConfig: { temperature: 0.8, maxOutputTokens: 1500 }
+      })
+    });
+    if (!res.ok) {
+      let errData = await res.json();
+      toast('❌ Lỗi ' + res.status + ': ' + (errData.error ? errData.error.message.substring(0,80) : 'Lỗi API'), 'err');
+      loading.style.display = 'none'; return;
+    }
+    let data = await res.json();
+    let reply = (data.candidates&&data.candidates[0]&&data.candidates[0].content&&data.candidates[0].content.parts&&data.candidates[0].content.parts[0]) 
+      ? data.candidates[0].content.parts[0].text 
+      : '⚠️ Không có kết quả.';
+    resultText.textContent = reply;
+    resultBox.style.display = 'block';
+    toast('✅ AI đã tạo nội dung!', 'ok');
+  } catch(e) {
+    let apiKey3 = localStorage.getItem('dht_gemini_key');
+    toast(apiKey3 ? 'Lỗi AI: ' + e.message : '⚙️ Chưa cài Gemini key - vào Cài đặt → Cài đặt AI', 'err');
+  }
+  loading.style.display = 'none';
+}
+
+function copyAiResult() {
+  let text = document.getElementById('ai-result-text').textContent;
+  navigator.clipboard.writeText(text).then(function(){ toast('📋 Đã sao chép!', 'ok'); });
+}
+function insertAiToEditor() {
+  let text = document.getElementById('ai-result-text').textContent;
+  let editor = document.getElementById('editor-content');
+  if (!editor) { switchTab('post-new', document.querySelector('[onclick*="post-new"]')); setTimeout(function(){ document.getElementById('editor-content').innerHTML += '<p>' + text.replace(/\n/g,'<br>') + '</p>'; toast('✅ Đã chèn vào bài viết!','ok'); }, 300); return; }
+  editor.innerHTML += '<p>' + text.split('\n').join('<br>') + '</p>';
+  toast('✅ Đã chèn vào bài viết!', 'ok');
+}
+function quickAI() {
+  switchTab('ai-write', document.querySelector('[onclick*="ai-write"]'));
+}
+
 
 </script>
 </body>
