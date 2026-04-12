@@ -1453,7 +1453,6 @@ let currentUser = JSON.parse(sessionStorage.getItem('dht_current_user') || 'null
 
 // ─── INIT ───
 (function init() {
-  var _a=document.getElementById("adminOverlay"),_l=document.getElementById("loginOverlay");if(_a)_a.style.display="none";if(_l)_l.style.display="none";
   // Apply logo
   const rawSrc = settings.logoSrc || LOGO_SRC;
   removeBg(rawSrc, applyLogo);
@@ -1511,20 +1510,21 @@ let currentUser = JSON.parse(sessionStorage.getItem('dht_current_user') || 'null
 // ─── ADMIN OPEN/CLOSE ───
 function openAdmin() {
   if (!currentUser) {
-    let lo = document.getElementById('loginOverlay');
-    lo.style.display = 'flex';
+    const lo = document.getElementById('loginOverlay');
+    if (lo) { lo.style.display = 'flex'; lo.style.removeProperty && lo.style.removeProperty('display'); lo.style.display = 'flex'; }
     setTimeout(function() {
-      let u = document.getElementById('login-user');
+      const u = document.getElementById('login-user');
       if (u) u.focus();
     }, 100);
   } else {
-    document.getElementById('adminOverlay').classList.add('open');
+    const ao = document.getElementById('adminOverlay');
+    if (ao) { ao.style.display = 'flex'; ao.classList.add('open'); }
     applyPermissions();
     updateUserBar();
     loadSettingsForm();
   }
 }
-function closeAdmin() { document.getElementById('adminOverlay').classList.remove('open'); }
+function closeAdmin() { const ao=document.getElementById('adminOverlay'); if(ao){ao.classList.remove('open');ao.style.display='';} }
 function closeAdminOutside(e) { if (e.target === document.getElementById('adminOverlay')) closeAdmin(); }
 
 // ─── LOGIN ───
