@@ -1887,29 +1887,27 @@ function resetPassword(id) {
 function renderUserList() {
   const el = document.getElementById('user-list');
   if (!el) return;
-  const safeRoleCls   = {super:'role-super',admin:'role-admin',editor:'role-editor',viewer:'role-viewer'};
-  const safeRoleLabel = {super:'👑 Super Admin',admin:'⚙️ Admin',editor:'✏️ Editor',viewer:'👁 Viewer'};
+  // Define locally - never rely on global
+  const RC = {'super':'role-super','admin':'role-admin','editor':'role-editor','viewer':'role-viewer'};
+  const RL = {'super':'👑 Super Admin','admin':'⚙️ Admin','editor':'✏️ Editor','viewer':'👁 Viewer'};
   const canSuper = currentUser && currentUser.role === 'super';
   el.innerHTML = users.map(function(u) {
-    const rc = safeRoleCls[u.role]   || '';
-    const rl = safeRoleLabel[u.role] || u.role;
-    let html2 = '<div class="user-card">';
-    html2 += '<div class="user-avatar" style="background:' + (u.color||'#484f58') + ';color:#fff">' + (u.avatar||u.name[0]) + '</div>';
-    html2 += '<div class="user-info"><div class="user-name">' + u.name;
-    if (currentUser && u.id === currentUser.id) html2 += ' <span class="fs-11 text-cyan">(bạn)</span>';
-    html2 += '</div><div class="user-meta">@' + u.username + ' · ' + (u.email||'—') + ' · ' + u.created + '</div></div>';
-    html2 += '<span class="role-badge ' + rc + '">' + rl + '</span>';
+    const rc = RC[u.role] || '';
+    const rl = RL[u.role] || u.role;
+    const isMe = currentUser && u.id === currentUser.id;
+    let s = '<div class="user-card">';
+    s += '<div class="user-avatar" style="background:' + (u.color||'#484f58') + ';color:#fff">' + (u.avatar||u.name[0]) + '</div>';
+    s += '<div class="user-info"><div class="user-name">' + u.name + (isMe?' <span style="font-size:11px;color:#00b4d8">(bạn)</span>':'') + '</div>';
+    s += '<div class="user-meta">@' + u.username + ' · ' + (u.email||'—') + ' · ' + u.created + '</div></div>';
+    s += '<span class="role-badge ' + rc + '">' + rl + '</span>';
     if (canSuper) {
-      html2 += '<div class="user-actions">';
-      html2 += '<button class="admin-btn secondary btn-md" onclick="showUserForm(' + u.id + ')">✏️</button>';
-      html2 += '<button class="admin-btn secondary btn-md" onclick="resetPassword(' + u.id + ')">🔑</button>';
-      if (u.id !== 1 && (!currentUser || u.id !== currentUser.id)) {
-        html2 += '<button class="admin-btn danger btn-md" onclick="deleteUser(' + u.id + ')">🗑</button>';
-      }
-      html2 += '</div>';
+      s += '<div class="user-actions">';
+      s += '<button class="admin-btn secondary" style="padding:6px 10px;font-size:12px" onclick="showUserForm(' + u.id + ')">✏️</button>';
+      s += '<button class="admin-btn secondary" style="padding:6px 10px;font-size:12px" onclick="resetPassword(' + u.id + ')">🔑</button>';
+      if (u.id !== 1 && !isMe) s += '<button class="admin-btn danger" style="padding:6px 10px;font-size:12px" onclick="deleteUser(' + u.id + ')">🗑</button>';
+      s += '</div>';
     }
-    html2 += '</div>';
-    return html2;
+    return s + '</div>';
   }).join('');
 }
 
@@ -2505,6 +2503,7 @@ function setAiMode(mode, btn) {
   document.getElementById('ai-tab-result').style.display = 'none';
 }
 async function sendAiChat() {
+  if (!aiTabHistory || !Array.isArray(aiTabHistory)) { aiTabHistory = []; }
   if (!Array.isArray(aiTabHistory)) aiTabHistory = [];
   const input = document.getElementById('ai-chat-input');
   const msg = (input.value || '').trim();
