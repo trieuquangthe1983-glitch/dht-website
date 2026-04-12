@@ -1887,9 +1887,29 @@ function resetPassword(id) {
 function renderUserList() {
   const el = document.getElementById('user-list');
   if (!el) return;
+  const safeRoleCls   = {super:'role-super',admin:'role-admin',editor:'role-editor',viewer:'role-viewer'};
+  const safeRoleLabel = {super:'👑 Super Admin',admin:'⚙️ Admin',editor:'✏️ Editor',viewer:'👁 Viewer'};
   const canSuper = currentUser && currentUser.role === 'super';
   el.innerHTML = users.map(function(u) {
-    return '<div class="user-card"><div class="user-avatar" style="background:' + (u.color||'#484f58') + ';color:#fff">' + (u.avatar||u.name[0]) + '</div><div class="user-info"><div class="user-name">' + u.name + (currentUser&&u.id===currentUser.id?' <span class="fs-11 text-cyan">(bạn)</span>':'') + '</div><div class="user-meta">@' + u.username + ' · ' + (u.email||'—') + ' · ' + u.created + '</div></div><span class="role-badge ' + (roleCls[u.role]||'') + '">' + (roleLabel2[u.role]||u.role) + '</span>' + (canSuper?'<div class="user-actions"><button class="admin-btn secondary btn-md" onclick="showUserForm(' + u.id + ')">✏️</button><button class="admin-btn secondary btn-md" onclick="resetPassword(' + u.id + ')">🔑</button>' + (u.id!==1&&(!currentUser||u.id!==currentUser.id)?'<button class="admin-btn danger btn-md" onclick="deleteUser(' + u.id + ')">🗑</button>':'') + '</div>':'') + '</div>';
+    const rc = safeRoleCls[u.role]   || '';
+    const rl = safeRoleLabel[u.role] || u.role;
+    let html2 = '<div class="user-card">';
+    html2 += '<div class="user-avatar" style="background:' + (u.color||'#484f58') + ';color:#fff">' + (u.avatar||u.name[0]) + '</div>';
+    html2 += '<div class="user-info"><div class="user-name">' + u.name;
+    if (currentUser && u.id === currentUser.id) html2 += ' <span class="fs-11 text-cyan">(bạn)</span>';
+    html2 += '</div><div class="user-meta">@' + u.username + ' · ' + (u.email||'—') + ' · ' + u.created + '</div></div>';
+    html2 += '<span class="role-badge ' + rc + '">' + rl + '</span>';
+    if (canSuper) {
+      html2 += '<div class="user-actions">';
+      html2 += '<button class="admin-btn secondary btn-md" onclick="showUserForm(' + u.id + ')">✏️</button>';
+      html2 += '<button class="admin-btn secondary btn-md" onclick="resetPassword(' + u.id + ')">🔑</button>';
+      if (u.id !== 1 && (!currentUser || u.id !== currentUser.id)) {
+        html2 += '<button class="admin-btn danger btn-md" onclick="deleteUser(' + u.id + ')">🗑</button>';
+      }
+      html2 += '</div>';
+    }
+    html2 += '</div>';
+    return html2;
   }).join('');
 }
 
@@ -2485,6 +2505,7 @@ function setAiMode(mode, btn) {
   document.getElementById('ai-tab-result').style.display = 'none';
 }
 async function sendAiChat() {
+  if (!Array.isArray(aiTabHistory)) aiTabHistory = [];
   const input = document.getElementById('ai-chat-input');
   const msg = (input.value || '').trim();
   if (!msg) return;
