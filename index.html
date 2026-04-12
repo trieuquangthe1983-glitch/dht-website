@@ -2,6 +2,8 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌊</text></svg>">
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Công ty Cổ phần Dịch vụ Tổng hợp DHT-V.io.vn</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Be+Vietnam+Pro:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -198,8 +200,9 @@ footer{background:var(--deep);border-top:1px solid rgba(0,180,216,.1);padding:60
 /* ══════════════════════════════════════
    ADMIN PANEL
 ══════════════════════════════════════ */
-.admin-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:9000;display:none;justify-content:center;align-items:flex-start;padding:20px;}
-.admin-overlay.open{display:flex;}
+.admin-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:9000;display:none!important;justify-content:center;align-items:flex-start;padding:20px;}
+.admin-overlay.open{display:flex!important;}
+.login-overlay.show{display:flex!important;}
 .admin-panel{background:var(--admin-bg);border:1px solid var(--admin-border);border-radius:16px;width:100%;max-width:1100px;max-height:92vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 30px 100px rgba(0,0,0,.8);}
 .admin-header{display:flex;align-items:center;justify-content:space-between;padding:18px 24px;border-bottom:1px solid var(--admin-border);background:var(--admin-surface);}
 .admin-header h2{font-size:16px;font-weight:600;color:#e6edf3;display:flex;align-items:center;gap:10px;}
@@ -270,7 +273,7 @@ select.admin-input{cursor:pointer;}
 /* TOAST */
 
 /* LOGIN GATE */
-.login-overlay{position:fixed;inset:0;background:rgba(2,11,24,0.98);backdrop-filter:blur(16px);z-index:99999;display:flex;align-items:center;justify-content:center;}
+.login-overlay{display:none!important;position:fixed;inset:0;background:rgba(2,11,24,0.98);backdrop-filter:blur(16px);z-index:99999;display:flex;align-items:center;justify-content:center;}
 .login-box{background:#0d1117;border:1px solid #30363d;border-radius:20px;padding:48px 40px;width:400px;max-width:95vw;text-align:center;position:relative;overflow:hidden;}
 .login-box::before{content:'';position:absolute;top:-60px;left:50%;transform:translateX(-50%);width:200px;height:200px;background:radial-gradient(circle,rgba(0,180,216,.15),transparent 70%);border-radius:50%;pointer-events:none;}
 .login-logo{height:90px;margin-bottom:20px;}
@@ -1374,13 +1377,7 @@ select.admin-input{cursor:pointer;}
   </div>
   <div class="ai-input-row">
     <textarea class="ai-input" id="ai-fab-input" placeholder="Nhập câu hỏi…" rows="1"
-      onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendFabAI();}"></textarea>
-    <button class="ai-send" onclick="sendFabAI()">➤</button>
-  </div>
-</div>
-
-
-<script>
+      onkeydown="if(event.key==='Enter'&&!e
 var roleCls    = {'super':'role-super','admin':'role-admin','editor':'role-editor','viewer':'role-viewer'};
 var roleLabel2 = {'super':'👑 Super Admin','admin':'⚙️ Admin','editor':'✏️ Editor','viewer':'👁 Viewer'};
 var aiPanelOpen  = false;
@@ -1513,18 +1510,23 @@ function openAdmin() {
     const lo = document.getElementById('loginOverlay');
     if (lo) {
       lo.classList.remove('d-none');
-      lo.style.display = 'flex';
+      lo.classList.add('show');
       setTimeout(function(){ const u=document.getElementById('login-user'); if(u)u.focus(); }, 100);
     }
   } else {
     const ao = document.getElementById('adminOverlay');
-    if (ao) { ao.style.display = 'flex'; ao.classList.add('open'); }
+    if (ao) ao.classList.add('open');
     applyPermissions();
     updateUserBar();
     loadSettingsForm();
   }
 }
-function closeAdmin() { const ao=document.getElementById('adminOverlay'); if(ao){ao.classList.remove('open');ao.style.display='';} }
+function closeAdmin() {
+  const ao = document.getElementById('adminOverlay');
+  if (ao) ao.classList.remove('open');
+  const lo = document.getElementById('loginOverlay');
+  if (lo) { lo.classList.remove('show'); lo.classList.add('d-none'); }
+}
 function closeAdminOutside(e) { if (e.target === document.getElementById('adminOverlay')) closeAdmin(); }
 
 // ─── LOGIN ───
@@ -1539,8 +1541,10 @@ function doLogin() {
   currentUser = found;
   sessionStorage.setItem('dht_current_user', JSON.stringify(found));
   document.getElementById('loginOverlay').style.display = 'none';
+  const lo2 = document.getElementById('loginOverlay');
+  if (lo2) { lo2.classList.remove('show'); lo2.classList.add('d-none'); }
   const ao2 = document.getElementById('adminOverlay');
-  if (ao2) { ao2.style.display = 'flex'; ao2.classList.add('open'); }
+  if (ao2) ao2.classList.add('open');
   document.getElementById('login-err').textContent = '';
   document.getElementById('login-pass').value = '';
   updateUserBar();
@@ -2641,6 +2645,9 @@ function projSave1(i,id){var l=pGet();var pi=l.findIndex(function(p){return p.id
 function projMove(id,dir){var l=pGet();var i=l.findIndex(function(p){return p.id===id;});var ni=i+dir;if(ni<0||ni>=l.length)return;var tmp=l[i];l[i]=l[ni];l[ni]=tmp;pSet(l);pAdmin();}
 function pAdmin(){var el=document.getElementById('proj-admin-list');if(!el)return;var l=pGet();var o='';l.forEach(function(p,i){o+='<div class="proj-edit-card"><div class="proj-edit-row"><div class="epicker-wrap"><div class="epicker-btn" id="epb'+i+'">'+p.icon+'</div><div class="epicker-grid" id="epg'+i+'"></div></div><input id="pftag'+i+'" value="'+p.tag.replace(/"/g,'&quot;')+'" placeholder="Danh mục" style="width:110px"><input id="pftitle'+i+'" value="'+p.title.replace(/"/g,'&quot;')+'" placeholder="Tiêu đề" style="flex:1">'+(l.length>1?'<button class="admin-btn danger btn-xs" onclick="projDel('+p.id+')">🗑</button>':'')+'</div><textarea id="pfdesc'+i+'">'+p.desc+'</textarea><input id="pfstat'+i+'" value="'+p.stat.replace(/"/g,'&quot;')+'" placeholder="Thông tin" style="width:100%;margin-top:6px"><div style="display:flex;gap:8px;margin-top:8px;"><button class="admin-btn primary btn-xs" onclick="projSave1('+i+','+p.id+')">💾 Lưu</button>'+(i>0?'<button class="admin-btn secondary btn-xs" onclick="projMove('+p.id+',-1)">↑</button>':'')+(i<l.length-1?'<button class="admin-btn secondary btn-xs" onclick="projMove('+p.id+',1)">↓</button>':'')+'</div></div>';});el.innerHTML=o;l.forEach(function(p,i){var b=document.getElementById('epb'+i);var g='epg'+i;if(b)b.onclick=function(){epOpen(this,g);};});}
 function pPage(){var grid=document.querySelector('.projects-grid');if(!grid)return;var l=pGet();var o='';l.forEach(function(p,i){var big=(i===0)?' style="grid-row:span 2"':'';var ih=(i===0)?'height:280px;':'';var fs=(i===0)?'60':'36';o+='<div class="project-card"'+big+'><div class="project-img" style="'+ih+'font-size:'+fs+'px;background:linear-gradient(135deg,#071e3d,#0a3460)">'+p.icon+'</div><div class="project-body"><div class="project-tag">'+p.tag+'</div><div class="project-title">'+p.title+'</div><div class="project-desc">'+p.desc+'</div><div class="project-footer"><div class="project-stat"><strong>'+p.stat+'</strong></div><div class="arrow-btn">→</div></div></div></div>';});grid.innerHTML=o;}
+pPage();
+var _sw0=switchTab;switchTab=function(id,el){_sw0(id,el);if(id==='projects')pAdmin();};
+adient(135deg,#071e3d,#0a3460)">'+p.icon+'</div><div class="project-body"><div class="project-tag">'+p.tag+'</div><div class="project-title">'+p.title+'</div><div class="project-desc">'+p.desc+'</div><div class="project-footer"><div class="project-stat"><strong>'+p.stat+'</strong></div><div class="arrow-btn">→</div></div></div></div>';});grid.innerHTML=o;}
 pPage();
 var _sw0=switchTab;switchTab=function(id,el){_sw0(id,el);if(id==='projects')pAdmin();};
 </script>
