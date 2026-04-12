@@ -675,6 +675,11 @@ select.admin-input{cursor:pointer;}
 </head>
 <body>
 
+<!-- VERSION INDICATOR - remove after confirming update -->
+<div id="version-banner" style="position:fixed;top:80px;left:50%;transform:translateX(-50%);z-index:99999;background:#00b4d8;color:#000;padding:8px 24px;border-radius:20px;font-size:13px;font-weight:700;box-shadow:0 4px 20px rgba(0,180,216,.6);cursor:pointer;" onclick="this.remove()">
+  ✅ Phiên bản MỚI đã load — Nhấn để đóng
+</div>
+
 <!-- NAV -->
 <nav id="navbar">
   <div class="nav-logo">
@@ -1894,7 +1899,7 @@ function loadSettingsForm() {
     'set-company': s.company || 'Công ty Cổ phần Dịch vụ Tổng hợp DHT',
     'set-domain': s.domain || 'dht-v.io.vn',
     'set-phone': s.phone || '(024) 1234 5678',
-    'set-email': s.email || 'info@dht-v.io.vn',
+    'set-email': s.email || '<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="2940474f46694d415d045f074046075f47">[email&#160;protected]</a>',
     'set-address': s.address || 'Hà Nội, Việt Nam',
     'set-slogan': s.slogan || 'Tầm nơi biển lớn – Giương buồm ra khơi',
     'stat-years': s.stats ? s.stats.years : 15,
@@ -2824,11 +2829,4 @@ async function testAI() {
       resultEl.innerHTML = '<span class="text-warn">⚠️ Kết nối OK nhưng phản hồi lạ: ' + JSON.stringify(json).substring(0,120) + '</span>';
     }
   } catch (e) {
-    resultEl.innerHTML = '<span class="text-danger">❌ Lỗi mạng: ' + e.message + '</span>';
-  }
-}
-
-
-</script>
-</body>
-</html>
+    resultE
