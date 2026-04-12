@@ -1511,11 +1511,11 @@ let currentUser = JSON.parse(sessionStorage.getItem('dht_current_user') || 'null
 function openAdmin() {
   if (!currentUser) {
     const lo = document.getElementById('loginOverlay');
-    if (lo) { lo.style.display = 'flex'; lo.style.removeProperty && lo.style.removeProperty('display'); lo.style.display = 'flex'; }
-    setTimeout(function() {
-      const u = document.getElementById('login-user');
-      if (u) u.focus();
-    }, 100);
+    if (lo) {
+      lo.classList.remove('d-none');
+      lo.style.display = 'flex';
+      setTimeout(function(){ const u=document.getElementById('login-user'); if(u)u.focus(); }, 100);
+    }
   } else {
     const ao = document.getElementById('adminOverlay');
     if (ao) { ao.style.display = 'flex'; ao.classList.add('open'); }
@@ -1539,7 +1539,8 @@ function doLogin() {
   currentUser = found;
   sessionStorage.setItem('dht_current_user', JSON.stringify(found));
   document.getElementById('loginOverlay').style.display = 'none';
-  document.getElementById('adminOverlay').classList.add('open');
+  const ao2 = document.getElementById('adminOverlay');
+  if (ao2) { ao2.style.display = 'flex'; ao2.classList.add('open'); }
   document.getElementById('login-err').textContent = '';
   document.getElementById('login-pass').value = '';
   updateUserBar();
@@ -1568,7 +1569,7 @@ function applyPermissions() {
   const canAdmin = r === 'super' || r === 'admin';
   const canEdit = r === 'super' || r === 'admin' || r === 'editor';
   const canSuper = r === 'super';
-  document.querySelectorAll('.perm-admin').forEach(function(el) { el.style.display = canAdmin ? 'flex' : 'none'; });
+  document.querySelectorAll('.perm-admin').forEach(function(el) { el.style.display = canAdmin ? '' : 'none'; });
   document.querySelectorAll('.perm-editor').forEach(function(el) { el.style.display = canEdit ? 'flex' : 'none'; });
   document.querySelectorAll('.perm-super').forEach(function(el) { el.style.display = canSuper ? 'flex' : 'none'; });
 }
