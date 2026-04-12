@@ -1814,8 +1814,8 @@ function renderSoftware() {
 }
 
 // ─── USER MANAGEMENT ───
-const roleLabel2 = {super:'👑 Super Admin',admin:'⚙️ Admin',editor:'✏️ Editor',viewer:'👁 Viewer'};
-const roleCls = {super:'role-super',admin:'role-admin',editor:'role-editor',viewer:'role-viewer'};
+var roleLabel2 = {super:'👑 Super Admin',admin:'⚙️ Admin',editor:'✏️ Editor',viewer:'👁 Viewer'};
+var roleCls = {super:'role-super',admin:'role-admin',editor:'role-editor',viewer:'role-viewer'};
 function showUserForm(id) {
   document.getElementById('user-form').style.display = 'block';
   if (id) {
@@ -2356,7 +2356,7 @@ function delNewsCard(id) {
 }
 
 // ─── AI FLOATING PANEL ───
-let aiPanelOpen = false;
+var aiPanelOpen = false;
 function toggleAiPanel() {
   const panel = document.getElementById('aiPanel');
   if (!panel) return;
@@ -2380,85 +2380,91 @@ function appendFabMsg(text, role) {
 }
 
 async function sendFabAI() {
+  // Find elements
   const input = document.getElementById('ai-fab-input');
   const msgs  = document.getElementById('ai-fab-messages');
-  if (!input || !msgs) { alert('Lỗi: Không tìm thấy phần tử AI panel!'); return; }
 
-  const msg = input.value.trim();
+  // Safety check
+  if (!input) { alert('ERR: ai-fab-input not found'); return; }
+  if (!msgs)  { alert('ERR: ai-fab-messages not found'); return; }
+
+  const msg = (input.value || '').trim();
   if (!msg) return;
   input.value = '';
+  input.disabled = true;
 
-  // Helper: add bubble
-  function bubble(text, cls) {
-    const d = document.createElement('div');
-    d.className = 'ai-msg ' + cls;
-    d.textContent = text;
-    msgs.appendChild(d);
-    msgs.scrollTop = msgs.scrollHeight;
-    return d;
+  // Show user message
+  msgs.innerHTML += '<div class="ai-msg user">' + msg.replace(/</g,'&lt;') + '</div>';
+
+  // Show typing indicator
+  const botId = 'bot-' + Date.now();
+  msgs.innerHTML += '<div class="ai-msg bot" id="' + botId + '">⟳ Đang xử lý...</div>';
+  msgs.scrollTop = 9999;
+
+  function setBotText(text) {
+    const el = document.getElementById(botId);
+    if (el) el.textContent = text;
+    else msgs.innerHTML += '<div class="ai-msg bot">' + text + '</div>';
+    msgs.scrollTop = 9999;
+    input.disabled = false;
   }
 
-  bubble(msg, 'user');
-  const bot = bubble('⟳ Đang kết nối Gemini...', 'bot');
-
-  // Step 1: Check API key
-  const apiKey = localStorage.getItem('dht_gemini_key') || '';
-  if (!apiKey) {
-    bot.textContent = '⚙️ Chưa có API key! Vào Quản trị → Cài đặt → Cài đặt AI → nhập key AIzaSy... → Lưu.';
+  // Check API key
+  const key = localStorage.getItem('dht_gemini_key') || '';
+  if (!key) {
+    setBotText('⚙️ Chưa có API key! Vào: Quản trị → Cài đặt → Cài đặt AI → nhập key AIzaSy... → Lưu');
     return;
   }
-  bot.textContent = '⟳ Gửi yêu cầu tới Gemini...';
 
-  // Step 2: Call Gemini
+  // Call Gemini
   try {
-    const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + apiKey;
-    const body = JSON.stringify({
-      contents: [{ parts: [{ text: 'Trả lời ngắn tiếng Việt. Bạn là AI của DHT (dht-v.io.vn).\nCâu hỏi: ' + msg }] }]
-    });
+    const resp = await fetch(
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + key,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: 'Bạn là AI của DHT. Trả lời ngắn gọn tiếng Việt.\nCâu hỏi: ' + msg }] }]
+        })
+      }
+    );
 
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: body
-    });
+    let data;
+    try { data = await resp.json(); }
+    catch(pe) { setBotText('❌ Không parse được JSON: ' + pe.message); return; }
 
-    const json = await res.json();
-
-    if (!res.ok) {
-      bot.textContent = '❌ API lỗi ' + res.status + ': ' + (json.error ? json.error.message : JSON.stringify(json).substring(0, 120));
+    if (!resp.ok) {
+      const errMsg = data && data.error ? data.error.message : JSON.stringify(data).substring(0, 150);
+      setBotText('❌ Lỗi ' + resp.status + ': ' + errMsg);
       return;
     }
 
-    // Parse response
-    const cands = json.candidates;
-    if (!cands || !cands.length) {
-      bot.textContent = '⚠️ Gemini trả về không có candidates. Toàn bộ phản hồi: ' + JSON.stringify(json).substring(0, 200);
-      return;
-    }
-    const parts = cands[0].content && cands[0].content.parts;
-    if (!parts || !parts.length) {
-      bot.textContent = '⚠️ Candidates[0] không có parts. Data: ' + JSON.stringify(cands[0]).substring(0, 150);
-      return;
-    }
-    const text = parts[0].text;
-    bot.textContent = text || '⚠️ parts[0].text rỗng. Data: ' + JSON.stringify(parts[0]);
+    const text = data &&
+      data.candidates &&
+      data.candidates[0] &&
+      data.candidates[0].content &&
+      data.candidates[0].content.parts &&
+      data.candidates[0].content.parts[0] &&
+      data.candidates[0].content.parts[0].text;
 
-  } catch (e) {
-    // Network error, CORS, etc.
-    if (e.message.includes('fetch') || e.message.includes('Failed') || e.message.includes('NetworkError')) {
-      bot.textContent = '🌐 Lỗi mạng/CORS: ' + e.message + '. Nếu đang dùng file:// hãy upload lên GitHub Pages trước.';
-    } else {
-      bot.textContent = '❌ Lỗi JS: ' + e.message + ' | ' + e.name;
-    }
+    setBotText(text || '⚠️ Không có text. Phản hồi raw: ' + JSON.stringify(data).substring(0, 200));
+
+  } catch (err) {
+    setBotText('❌ ' + err.name + ': ' + err.message +
+      (err.message.toLowerCase().includes('failed') ? ' → Có thể bị CORS hoặc mạng block. Hãy dùng trang đã upload lên GitHub Pages, không mở file trực tiếp.' : ''));
   }
-  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function fabAsk(q) {
+  const i = document.getElementById('ai-fab-input');
+  if (i) { i.value = q; sendFabAI(); }
 }
 
 
 // ─── AI WRITE TAB ───
 
-let aiMode = 'write';
-let aiModeConfig = {
+var aiMode = 'write';
+var aiModeConfig = {
   write: { hint: '✍️ Nhập chủ đề → AI sẽ viết bài hoàn chỉnh cho bạn', label: 'Chủ đề bài viết *', placeholder: 'Ví dụ: Giới thiệu dịch vụ cho thuê sân pickleball của DHT Sports Complex...' },
   ads: { hint: '📢 Nhập sản phẩm/dịch vụ → AI tạo nội dung quảng cáo hấp dẫn', label: 'Sản phẩm / Dịch vụ cần quảng cáo *', placeholder: 'Ví dụ: Sân pickleball DHT, giá 150k/giờ, ở quận...' },
   summary: { hint: '📋 Dán văn bản dài → AI tóm tắt ngắn gọn', label: 'Nội dung cần tóm tắt *', placeholder: 'Dán nội dung bài viết, hợp đồng, tài liệu cần tóm tắt...' },
@@ -2481,7 +2487,7 @@ function setAiMode(mode, btn) {
   document.getElementById('ai-tab-result').style.display = 'none';
 }
 
-let aiTabHistory = [];
+var aiTabHistory = [];
 async function sendAiChat() {
   const input = document.getElementById('ai-chat-input');
   const msg = (input.value || '').trim();
