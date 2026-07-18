@@ -1,0 +1,23 @@
+# Cấu hình deploy Netlify cho website DHT (trang tĩnh)
+[build]
+  publish = "."        # thư mục chứa index.html (deploy trực tiếp, không cần build)
+
+# Bảo mật cơ bản qua HTTP headers
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "geolocation=(), microphone=(), camera=()"
+
+# Cache file tĩnh (logo, js) — index.html luôn lấy mới
+[[headers]]
+  for = "/dht-supabase.js"
+  [headers.values]
+    Cache-Control = "public, max-age=300"
+
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "no-cache"
