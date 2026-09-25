@@ -39,8 +39,8 @@ a:focus-visible,button:focus-visible,[tabindex]:focus-visible,input:focus-visibl
 .nav-toggle{display:none;background:transparent;border:1px solid rgba(0,180,216,.35);border-radius:10px;width:42px;height:42px;color:var(--cyan);font-size:20px;cursor:pointer;align-items:center;justify-content:center;}
 @media(max-width:900px){
   .nav-toggle{display:inline-flex;}
-  .nav-links{display:flex;position:fixed;top:72px;left:0;right:0;flex-direction:column;gap:0;background:rgba(4,22,45,.98);backdrop-filter:blur(16px);border-bottom:1px solid rgba(0,180,216,.2);padding:8px 0;max-height:0;overflow:hidden;transition:max-height .35s ease;box-shadow:0 20px 60px rgba(0,0,0,.5);}
-  .nav-links.open{max-height:80vh;overflow:auto;}
+  .nav-links{display:flex;position:fixed;top:72px;left:0;right:0;flex-direction:column;gap:0;background:rgba(4,22,45,.98);backdrop-filter:blur(16px);border-bottom:1px solid rgba(0,180,216,.2);padding:0;max-height:0;overflow:hidden;transition:max-height .35s ease;box-shadow:0 20px 60px rgba(0,0,0,.5);}
+  .nav-links.open{max-height:80vh;overflow:auto;padding:8px 0;}
   .nav-links li{width:100%;}
   .nav-links a{display:block;padding:14px 24px;}
   .nav-links li.has-drop>a::before{float:right;}
@@ -431,7 +431,6 @@ select.admin-input{cursor:pointer;}
   .project-card:first-child{grid-row:span 1;}
   .stats-grid{grid-template-columns:repeat(2,1fr);}
   .footer-grid{grid-template-columns:1fr 1fr;}
-  .nav-links{display:none;}
   .admin-sidebar{width:180px;}
   .stat-cards{grid-template-columns:repeat(2,1fr);}
   .form-row{grid-template-columns:1fr;}
@@ -846,6 +845,7 @@ select.admin-input{cursor:pointer;}
         <div class="dd-footer"><a href="#du-an" onclick="closeDropdowns()">Xem tất cả dự án →</a></div>
       </div>
     </li>
+    <li><a href="nong-trai/" title="DHT Smart Farm – quản lý trang trại công nghệ cao">🌱 Nông Trại</a></li>
   </ul>
   
 </nav>
@@ -878,6 +878,7 @@ select.admin-input{cursor:pointer;}
     <div class="hero-cta reveal">
       <a href="#linh-vuc" class="btn-primary">🌊 Khám phá dịch vụ</a>
       <a href="#lien-he" class="btn-outline">📞 Liên hệ ngay</a>
+      <a href="nong-trai/" class="btn-outline">🌱 Quản lý nông trại</a>
     </div>
     <div class="hero-trust reveal">
       <span><b>15+</b> năm kinh nghiệm</span><span class="ht-dot">•</span>
@@ -1201,7 +1202,7 @@ select.cf-input option{background:#06192f;}
     </div>
     <div class="footer-col">
       <h4>Điều hướng</h4>
-      <ul><li><a href="#home">Trang chủ</a></li><li><a href="#linh-vuc">Lĩnh vực hoạt động</a></li><li><a href="#tin-tuc">Tin tức</a></li><li><a href="#tai-ve">Tải ứng dụng</a></li><li><a href="#du-an">Dự án nổi bật</a></li></ul>
+      <ul><li><a href="#home">Trang chủ</a></li><li><a href="#linh-vuc">Lĩnh vực hoạt động</a></li><li><a href="#tin-tuc">Tin tức</a></li><li><a href="#tai-ve">Tải ứng dụng</a></li><li><a href="#du-an">Dự án nổi bật</a></li><li><a href="nong-trai/">Nông trại thông minh</a></li></ul>
     </div>
     <div class="footer-col">
       <h4>Dịch vụ</h4>
