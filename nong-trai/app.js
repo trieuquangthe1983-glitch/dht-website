@@ -53,7 +53,10 @@ let S;
 const EMPTY = () => ({
   v: 1, farm: { name: 'Trang trại của tôi', owner: '', address: '', phone: '', code: 'DHT' },
   units: [], batches: [], tasks: [], routine: {}, logs: [], readings: [], devices: [], rules: [], iotLog: [],
-  inventory: [], invTx: [], storages: [], lots: [], fin: [], staff: [], equip: []
+  inventory: [], invTx: [], storages: [], lots: [], fin: [], staff: [], equip: [],
+  /* Cho thuê – Chợ – Thông tin chung – Hợp tác (rent.js) */
+  plots: [], customers: [], contracts: [], invoices: [], requests: [], listings: [], orders: [],
+  events: [], news: [], partners: [], bookings: [], pools: [], posts: [], info: {}
 });
 function load() { try { const r = localStorage.getItem(KEY); return r ? Object.assign(EMPTY(), JSON.parse(r)) : null; } catch (e) { return null; } }
 function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* bộ nhớ bị chặn/đầy: vẫn chạy trong phiên */ } }
@@ -991,7 +994,7 @@ VIEWS.trace = {
           <div class="alert info"><span class="ic">🗓️</span><div>${S.tasks.filter(x => x.batchId === b.id && x.done && x.date <= l.date).length} công việc quy trình đã hoàn thành${vacc.length ? ', ' + vacc.length + ' mốc thú y' : ''}</div></div>
         </div>
         <h3 class="sec">Vật tư đầu vào sử dụng</h3>${tbl(['Ngày', 'Hoạt động', 'Vật tư', ['Số lượng', 'r'], 'Cách ly'], logs.map(x => { const it = get('inventory', x.itemId); return `<tr><td>${fd(x.date)}</td><td>${esc(LOG_TYPES[x.type].n)}</td><td>${esc(it ? it.name : '')}</td><td class="r num">${x.qty ? nf(x.qty, 2) + ' ' + esc(it ? it.unit : '') : ''}</td><td>${x.phi ? x.phi + ' ngày' : ''}</td></tr>`; }), 'Không ghi nhận vật tư đầu vào')}
-        <h3 class="sec">Phân phối</h3>${tbl(['Ngày', 'Hình thức', ['Số lượng', 'r'], 'Nơi nhận / lý do'], l.moves.map(m => `<tr><td>${fd(m.date)}</td><td>${m.type === 'sale' ? 'Xuất bán' : 'Hao hụt'}</td><td class="r num">${nf(m.qty, 1)} ${esc(l.unit)}</td><td>${esc(m.buyer || m.note)}</td></tr>`), 'Chưa xuất kho')}
+        <h3 class="sec">Phân phối</h3>${tbl(['Ngày', 'Hình thức', ['Số lượng', 'r'], 'Nơi nhận / lý do'], l.moves.map(m => `<tr><td>${fd(m.date)}</td><td>${({ sale: 'Xuất bán', loss: 'Hao hụt', deliver: 'Giao khách thuê' })[m.type] || m.type}</td><td class="r num">${nf(m.qty, 1)} ${esc(l.unit)}</td><td>${esc(m.buyer || m.note)}</td></tr>`), 'Chưa xuất kho')}
       </div>`;
     }
     const recent = S.lots.slice().sort((a, c) => c.date.localeCompare(a.date)).slice(0, 12);
@@ -1164,13 +1167,19 @@ VIEWS.settings = {
 };
 
 /* ============================ ĐIỀU HƯỚNG ============================ */
-const NAV = [
+/* Mỗi phân hệ (module) có nhóm menu riêng; rent.js bổ sung các phân hệ khác */
+const MODULES = [{ id: 'farm', n: 'Quản trị farm', icon: '🏭', groups: [
   ['Điều hành', [['dashboard', '📊', 'Tổng quan'], ['tasks', '🗓️', 'Lịch công việc'], ['advisor', '🧠', 'Cố vấn thông minh']]],
   ['Sản xuất', [['units', '🏡', 'Khu sản xuất'], ['batches', '🔄', 'Lứa nuôi / Vụ trồng'], ['env', '📡', 'Môi trường & IoT']]],
   ['Sau thu hoạch', [['harvest', '📦', 'Thu hoạch & bảo quản'], ['trace', '🔎', 'Truy xuất nguồn gốc']]],
   ['Nguồn lực', [['inventory', '🏬', 'Kho vật tư'], ['equip', '🚜', 'Máy móc – cơ giới hóa'], ['staff', '👷', 'Nhân sự'], ['finance', '💰', 'Tài chính']]],
   ['Tri thức & hệ thống', [['sop', '📚', 'Quy trình chuẩn'], ['settings', '⚙️', 'Cài đặt & sao lưu']]]
-];
+] }];
+const NAV_BADGES = {
+  dashboard: () => { const n = computeAlerts().length; return n ? `<span class="badge b-warn">${n}</span>` : ''; },
+  tasks: () => { const n = S.tasks.filter(x => !x.done && x.date < today()).length; return n ? `<span class="badge b-bad">${n}</span>` : ''; }
+};
+const moduleOf = v => MODULES.find(m => m.groups.some(([, items]) => items.some(([k]) => k === v))) || MODULES[0];
 function route() {
   const h = location.hash.replace(/^#\/?/, '') || 'dashboard';
   const [v, ...rest] = h.split('/');
@@ -1183,8 +1192,9 @@ function render() {
   $('#pageTitle').textContent = typeof V.title === 'function' ? V.title(r.arg) : V.title;
   $('#view').innerHTML = V.render(r.arg);
   if (V.after) V.after(r.arg);
-  const cur = V.nav || r.v, alerts = computeAlerts().length, od = S.tasks.filter(x => !x.done && x.date < today()).length;
-  $('#nav').innerHTML = NAV.map(([g, items]) => `<div class="grp">${g}</div>` + items.map(([k, ic, l]) => `<a href="#/${k}" class="${k === cur ? 'on' : ''}"><span>${ic}</span>${l}${k === 'dashboard' && alerts ? `<span class="badge b-warn">${alerts}</span>` : ''}${k === 'tasks' && od ? `<span class="badge b-bad">${od}</span>` : ''}</a>`).join('')).join('');
+  const cur = V.nav || r.v, mod = moduleOf(cur);
+  $('#nav').innerHTML = `<div class="mods">${MODULES.map(m => `<a href="#/${m.groups[0][1][0][0]}" class="mod ${m === mod ? 'on' : ''}" title="${esc(m.n)}"><span>${m.icon}</span><small>${esc(m.n)}</small></a>`).join('')}</div>`
+    + mod.groups.map(([g, items]) => `<div class="grp">${g}</div>` + items.map(([k, ic, l]) => `<a href="#/${k}" class="${k === cur ? 'on' : ''}"><span>${ic}</span>${l}${NAV_BADGES[k] ? NAV_BADGES[k]() : ''}</a>`).join('')).join('');
   $('#farmName').textContent = S.farm.name;
   if (key === lastRoute) window.scrollTo(0, y); else { window.scrollTo(0, 0); lastRoute = key; }
 }
@@ -1435,12 +1445,17 @@ function seed() {
   if (last('u1')) last('u1').temp = 28.4;
   S.iotLog.push({ ts: now - 36e5, msg: '⚙️ Chuồng gà thịt A1: Nhiệt độ 27,1 °C > 26,5 → BẬT Quạt hút 1–3' });
   S.iotLog.push({ ts: now - 18e5, msg: '⚙️ Nhà nấm N1: Độ ẩm KK 84 % < 86 → BẬT Phun sương tầng 1–6' });
+  if (typeof seedExtra === 'function') seedExtra(D);
   const res = S; S = saved; return res;
 }
 
 /* ============================ KHỞI ĐỘNG ============================ */
-S = load() || seed();
-save();
-render();
-if (store.get('dht_farm_sim') === '1') { $('#simToggle').checked = true; setSim(true); }
-if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
+/* Khởi động sau khi mọi script (kể cả rent.js) đã nạp */
+document.addEventListener('DOMContentLoaded', () => {
+  S = load() || seed();
+  if (typeof migrateExtra === 'function') migrateExtra();
+  save();
+  render();
+  if (store.get('dht_farm_sim') === '1') { $('#simToggle').checked = true; setSim(true); }
+  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
+});
