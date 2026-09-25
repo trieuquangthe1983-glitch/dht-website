@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DHT Smart Farm</title>
+<meta name="description" content="Ứng dụng quản lý trang trại nông nghiệp công nghệ cao khép kín: gia cầm, nấm, rau sạch, dược liệu — từ quy trình, IoT, kho, thu hoạch, bảo quản đến truy xuất nguồn gốc.">
+<meta name="theme-color" content="#1f6f43">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<div class="app">
+  <aside class="side" id="side">
+    <div class="brand">
+      <img src="icon.svg" alt="" width="34" height="34">
+      <div><b>DHT Smart Farm</b><small id="farmName">Trang trại</small></div>
+    </div>
+    <nav id="nav"></nav>
+    <div class="side-foot">Dữ liệu lưu cục bộ trên thiết bị · hoạt động offline</div>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+  <div class="main">
+    <header class="top">
+      <button class="icon-btn only-mobile" id="menuBtn" aria-label="Mở menu">☰</button>
+      <h1 id="pageTitle">Tổng quan</h1>
+      <div class="top-actions">
+        <label class="sim" title="Mô phỏng cảm biến IoT gửi dữ liệu mỗi 10 giây">
+          <input type="checkbox" id="simToggle"><span class="dot"></span><span class="lbl">IoT trực tuyến</span>
+        </label>
+        <button class="icon-btn" id="themeBtn" aria-label="Đổi giao diện sáng/tối">◐</button>
+      </div>
+    </header>
+    <main id="view" tabindex="-1"></main>
+  </div>
+</div>
+
+<div class="modal" id="modal" hidden>
+  <div class="modal-box" role="dialog" aria-modal="true">
+    <div class="modal-head"><h3 id="modalTitle"></h3><button class="icon-btn" data-act="closeModal" aria-label="Đóng">✕</button></div>
+    <div id="modalBody"></div>
+  </div>
+</div>
+<div class="toasts" id="toasts"></div>
+
+<script src="sop.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
