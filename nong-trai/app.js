@@ -56,7 +56,9 @@ const EMPTY = () => ({
   inventory: [], invTx: [], storages: [], lots: [], fin: [], staff: [], equip: [],
   /* Cho thuê – Chợ – Thông tin chung – Hợp tác (rent.js) */
   plots: [], customers: [], contracts: [], invoices: [], requests: [], listings: [], orders: [],
-  events: [], news: [], partners: [], bookings: [], pools: [], posts: [], info: {}
+  events: [], news: [], partners: [], bookings: [], pools: [], posts: [], info: {},
+  /* Ngân hàng con giống (seeds.js) */
+  seeds: [], seedLots: [], seedOrders: []
 });
 function load() { try { const r = localStorage.getItem(KEY); return r ? Object.assign(EMPTY(), JSON.parse(r)) : null; } catch (e) { return null; } }
 function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* bộ nhớ bị chặn/đầy: vẫn chạy trong phiên */ } }
@@ -969,10 +971,22 @@ VIEWS.trace = {
   title: 'Truy xuất nguồn gốc',
   render(arg) {
     const code = (arg || UI.trace || '').trim().toUpperCase();
-    const l = code && S.lots.find(x => x.code.toUpperCase() === code);
+    const docs = S.traceDocs; /* bản công khai tạo sẵn khi xem từ máy chủ */
+    const l = code && !docs && S.lots.find(x => x.code.toUpperCase() === code);
     let body = '';
-    if (code && !l) body = alertHtml({ lv: 'bad', msg: `Không tìm thấy lô "${code}"` });
-    if (l) {
+    if (docs && code) body = docs[code] || alertHtml({ lv: 'bad', msg: `Không tìm thấy lô "${code}"` });
+    else if (code && !l) body = alertHtml({ lv: 'bad', msg: `Không tìm thấy lô "${code}"` });
+    if (l) body = traceDoc(l);
+    const recent = docs ? Object.keys(docs).slice(0, 12).map(c => ({ code: c })) : S.lots.slice().sort((a, c) => c.date.localeCompare(a.date)).slice(0, 12);
+    return `<div class="toolbar no-print"><input id="traceInput" placeholder="Nhập mã lô, VD: DHT-NM260918-ABC" value="${esc(code)}" style="flex:1;min-width:220px"><button class="btn pri" data-act="traceGo">🔎 Tra cứu</button></div>
+    ${body}
+    <div class="card sec no-print"><h3 style="margin-bottom:8px">Lô gần đây</h3><div style="display:flex;flex-wrap:wrap;gap:6px">${recent.map(x => `<a class="btn sm" href="#/trace/${encodeURIComponent(x.code)}"><code>${esc(x.code)}</code></a>`).join('') || '<span class="muted">Chưa có lô</span>'}</div></div>`;
+  }
+};
+/* Hồ sơ truy xuất một lô; pub = bản công khai (ẩn tên người mua) */
+function traceDoc(l, pub) {
+  let body = '';
+  {
       const b = get('batches', l.batchId), sop = sopOf(b), u = get('units', l.unitId) || {}, st = get('storages', l.storageId);
       const logs = S.logs.filter(x => x.batchId === l.batchId && x.date <= l.date && (x.itemId || x.phi)).sort((a, c) => a.date.localeCompare(c.date));
       const phi = S.logs.filter(x => x.batchId === l.batchId && x.phi > 0 && x.date <= l.date).map(x => addDays(x.date, x.phi)).sort().pop();
@@ -994,15 +1008,11 @@ VIEWS.trace = {
           <div class="alert info"><span class="ic">🗓️</span><div>${S.tasks.filter(x => x.batchId === b.id && x.done && x.date <= l.date).length} công việc quy trình đã hoàn thành${vacc.length ? ', ' + vacc.length + ' mốc thú y' : ''}</div></div>
         </div>
         <h3 class="sec">Vật tư đầu vào sử dụng</h3>${tbl(['Ngày', 'Hoạt động', 'Vật tư', ['Số lượng', 'r'], 'Cách ly'], logs.map(x => { const it = get('inventory', x.itemId); return `<tr><td>${fd(x.date)}</td><td>${esc(LOG_TYPES[x.type].n)}</td><td>${esc(it ? it.name : '')}</td><td class="r num">${x.qty ? nf(x.qty, 2) + ' ' + esc(it ? it.unit : '') : ''}</td><td>${x.phi ? x.phi + ' ngày' : ''}</td></tr>`; }), 'Không ghi nhận vật tư đầu vào')}
-        <h3 class="sec">Phân phối</h3>${tbl(['Ngày', 'Hình thức', ['Số lượng', 'r'], 'Nơi nhận / lý do'], l.moves.map(m => `<tr><td>${fd(m.date)}</td><td>${({ sale: 'Xuất bán', loss: 'Hao hụt', deliver: 'Giao khách thuê' })[m.type] || m.type}</td><td class="r num">${nf(m.qty, 1)} ${esc(l.unit)}</td><td>${esc(m.buyer || m.note)}</td></tr>`), 'Chưa xuất kho')}
+        <h3 class="sec">Phân phối</h3>${tbl(['Ngày', 'Hình thức', ['Số lượng', 'r'], 'Nơi nhận / lý do'], l.moves.map(m => `<tr><td>${fd(m.date)}</td><td>${({ sale: 'Xuất bán', loss: 'Hao hụt', deliver: 'Giao khách thuê' })[m.type] || m.type}</td><td class="r num">${nf(m.qty, 1)} ${esc(l.unit)}</td><td>${pub ? (m.type === 'loss' ? 'Hao hụt' : 'Khách hàng') : esc(m.buyer || m.note)}</td></tr>`), 'Chưa xuất kho')}
       </div>`;
-    }
-    const recent = S.lots.slice().sort((a, c) => c.date.localeCompare(a.date)).slice(0, 12);
-    return `<div class="toolbar no-print"><input id="traceInput" placeholder="Nhập mã lô, VD: DHT-NM260918-ABC" value="${esc(code)}" style="flex:1;min-width:220px"><button class="btn pri" data-act="traceGo">🔎 Tra cứu</button></div>
-    ${body}
-    <div class="card sec no-print"><h3 style="margin-bottom:8px">Lô gần đây</h3><div style="display:flex;flex-wrap:wrap;gap:6px">${recent.map(x => `<a class="btn sm" href="#/trace/${encodeURIComponent(x.code)}"><code>${esc(x.code)}</code></a>`).join('') || '<span class="muted">Chưa có lô</span>'}</div></div>`;
   }
-};
+  return body;
+}
 
 VIEWS.inventory = {
   title: 'Kho vật tư',
@@ -1451,6 +1461,7 @@ function seed() {
   S.iotLog.push({ ts: now - 36e5, msg: '⚙️ Chuồng gà thịt A1: Nhiệt độ 27,1 °C > 26,5 → BẬT Quạt hút 1–3' });
   S.iotLog.push({ ts: now - 18e5, msg: '⚙️ Nhà nấm N1: Độ ẩm KK 84 % < 86 → BẬT Phun sương tầng 1–6' });
   if (typeof seedExtra === 'function') seedExtra(D);
+  if (typeof seedSeeds === 'function') seedSeeds(D);
   const res = S; S = saved; return res;
 }
 
