@@ -1,6 +1,6 @@
 /* Service worker: cho phép ứng dụng chạy offline hoàn toàn */
-const CACHE = 'dht-farm-v2';
-const FILES = ['./', './index.html', './app.css', './app.js', './sop.js', './rent.js', './icon.svg', './manifest.webmanifest'];
+const CACHE = 'dht-farm-v3';
+const FILES = ['./', './index.html', './app.css', './app.js', './sop.js', './qr.js', './rent.js', './icon.svg', './manifest.webmanifest'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));

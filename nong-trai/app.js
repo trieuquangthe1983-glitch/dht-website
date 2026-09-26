@@ -1256,7 +1256,12 @@ document.addEventListener('click', e => {
 });
 document.addEventListener('change', e => {
   const el = e.target;
-  if (el.closest('#modal') && el.dataset.re) { const k = el.name; FORM.data = readForm(); if (FORM.onChange) FORM.onChange(FORM.data, k); drawForm(); return; }
+  if (el.closest('#modal') && el.dataset.re) {
+    if (!FORM || FORM.busy) return; /* chặn vẽ lại lồng nhau (blur khi phần tử bị thay) */
+    FORM.busy = true;
+    try { const k = el.name; FORM.data = readForm(); if (FORM.onChange) FORM.onChange(FORM.data, k); drawForm(); } finally { if (FORM) FORM.busy = false; }
+    return;
+  }
   const c = el.dataset.chg;
   if (!c) { if (el.id === 'importFile') importFile(el.files[0]); return; }
   if (c === 'task') { const x = get('tasks', el.dataset.id); x.done = el.checked; x.doneAt = el.checked ? Date.now() : null; }
