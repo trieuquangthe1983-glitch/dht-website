@@ -1,6 +1,6 @@
 /* Service worker: cho phép ứng dụng chạy offline hoàn toàn */
-const CACHE = 'dht-farm-v3';
-const FILES = ['./', './index.html', './app.css', './app.js', './sop.js', './qr.js', './rent.js', './icon.svg', './manifest.webmanifest'];
+const CACHE = 'dht-farm-v4';
+const FILES = ['./', './index.html', './app.css', './app.js', './sop.js', './qr.js', './rent.js', './seeds.js', './cloud.js', './admin.js', './icon.svg', './manifest.webmanifest'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
@@ -14,7 +14,7 @@ self.addEventListener('activate', e => {
 
 /* Mạng trước (luôn lấy bản mới khi online), rơi về cache khi offline */
 self.addEventListener('fetch', e => {
-  if (e.request.method !== 'GET') return;
+  if (e.request.method !== 'GET' || new URL(e.request.url).origin !== self.location.origin) return;
   e.respondWith(
     fetch(e.request)
       .then(res => {

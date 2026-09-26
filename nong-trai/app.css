@@ -400,3 +400,11 @@ body.tenant .admin-only, body.tenant .sim { display: none !important; }
   body.print-modal .modal-box { box-shadow: none; max-width: none; }
   body.print-modal .modal-head .icon-btn, body.print-modal .no-print, body.print-modal .verify { display: none !important; }
 }
+
+/* ---- Chế độ công khai / quản trị / máy chủ ---- */
+body.public .admin-only, body.public .sim { display: none !important; }
+.setup pre { white-space: pre-wrap; word-break: break-word; background: var(--surface-2, #f3f5f2); padding: 8px; border-radius: 8px; font-size: 12px; max-height: 320px; overflow: auto; }
+#cloudChip, #adminBtn { white-space: nowrap; }
+#cloudChip.ok { color: #1b7f3b; }
+#cloudChip.err { color: #b3261e; }
+#cloudChip[hidden], #adminBtn[hidden] { display: none !important; }

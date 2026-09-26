@@ -80,7 +80,7 @@ const addMonths = (s, n) => { const d = new Date(s + 'T00:00:00'), day = d.getDa
 const code = (pre, date) => `${pre}${(date || today()).slice(2).replace(/-/g, '')}-${Math.random().toString(36).slice(2, 5).toUpperCase()}`;
 const curBatch = c => c.batchIds.map(id => get('batches', id)).filter(Boolean).filter(b => b.status === 'active').pop();
 const listingStock = l => { const lot = get('lots', l.lotId); return lot ? lot.remain : (l.stock || 0); };
-const listingBlocked = l => { const lot = get('lots', l.lotId), b = lot && get('batches', lot.batchId), p = b && phiUntil(b); return p && p > today() ? p : null; };
+const listingBlocked = l => { if (l.blockedUntil !== undefined) return l.blockedUntil && l.blockedUntil > today() ? l.blockedUntil : null; const lot = get('lots', l.lotId), b = lot && get('batches', lot.batchId), p = b && phiUntil(b); return p && p > today() ? p : null; };
 const custPoints = cid => Math.floor(sum(S.orders.filter(o => o.customerId === cid && o.paid), o => o.total) / 10000);
 function seasons(c) { const sop = SOPS.find(s => s.id === c.sopId); return Math.max(1, Math.round(c.months * 30 / (sop ? sop.duration : 90))); }
 function contractValue(c) { return c.billing === 'month' ? c.price * c.qty * c.months : c.billing === 'season' ? c.price * c.qty * seasons(c) : 0; }
@@ -236,7 +236,7 @@ function contractForm(preset = {}) {
         ...newCustomerFields(d).map(f => ({ ...f, re: f.k === 'cName' || f.k === 'cPhone' })),
         { k: 'username', l: 'Tên đăng nhập tài khoản thuê', req: true, hint: '🔐 Mã truy cập bảo mật được sinh ngẫu nhiên khi ký, chỉ hiển thị một lần.' },
         sec(2, 'Gói thuê & số lượng'),
-        { k: 'planId', l: 'Chọn gói thuê', type: 'cards', re: true, opts: RENT_PLANS.map(p => [p.id, `<span class="pi">${p.icon}</span><b>${esc(p.n)}</b><small>${p.price ? `${money(packPrice(p))}${periodL(p)} / gói ${PACK} ${esc(p.unit)}` : 'Chia sản lượng'}</small>`]) },
+        { k: 'planId', l: 'Chọn gói thuê', type: 'cards', re: true, opts: RENT_PLANS.filter(p => !p.hidden || p.id === d.planId).map(p => [p.id, `<span class="pi">${p.icon}</span><b>${esc(p.n)}</b><small>${p.price ? `${money(packPrice(p))}${periodL(p)} / gói ${PACK} ${esc(p.unit)}` : 'Chia sản lượng'}</small>`]) },
         { k: 'packs', l: `Số gói (1 gói = ${PACK} ${unitL})`, type: 'number', re: true, req: true, min: 1, hint: `<span class="stepper"><button type="button" class="btn sm" data-act="packStep" data-d="-1">− 1 gói</button><button type="button" class="btn sm" data-act="packStep" data-d="1">＋ 1 gói</button></span> = <b>${nf(d.packs * PACK)} ${esc(unitL)}</b>${plan.price ? ` × ${money(plan.price)} = <b>${money(plan.price * d.packs * PACK)}</b>${periodL(plan)}` : ''}${plan.min > 1 ? ` · khuyến nghị ${nf(Math.ceil(plan.min / PACK))}–${nf(Math.floor(plan.max / PACK))} gói` : ''}` },
         { k: 'plotId', l: 'Lô cho thuê', type: 'select', re: true, opts: fits.length ? fits.map(p => [p.id, `${p.code} · ${(get('units', p.unitId) || {}).name} · ${nf(p.size)} ${plotUnitL(p)}${p.size < need ? ' ⚠ không đủ' : ''}`]) : [['', '— Không còn lô trống phù hợp gói này —']] },
         { k: 'sopId', l: 'Cây trồng / vật nuôi (quy trình chuẩn)', type: 'select', opts: sops.length ? sops.map(s => [s.id, s.name]) : [['', '—']] },
@@ -440,10 +440,10 @@ function checkoutForm() {
   const lines = cartLines();
   if (!lines.length) { toast('Giỏ hàng trống'); return; }
   openForm({
-    title: 'Đặt hàng', ok: 'Xác nhận đặt hàng', data: { customerId: tenantId() || UI.cust || (S.customers[0] || {}).id || '', delivery: 'pickup', pay: 'Chuyển khoản' },
+    title: 'Đặt hàng', ok: 'Xác nhận đặt hàng', data: { customerId: tenantId() || (adminNow() ? UI.cust || (S.customers[0] || {}).id || '' : ''), delivery: 'pickup', pay: 'Chuyển khoản' },
     intro: d => { const q = quote(lines, d); return `<div class="alert info"><span class="ic">🧾</span><div class="grow">${lines.map(x => `${esc(x.l.title)} × ${nf(x.qty, 2)} = ${money(x.qty * x.l.price)}`).join('<br>')}<br>Tạm tính ${money(q.sub)}${q.disc ? ` · Ưu đãi thành viên −${money(q.disc)}` : ''}${q.ship ? ` · Phí giao ${money(q.ship)}` : ''}<br><b>Tổng thanh toán: ${money(q.total)}</b></div></div>`; },
     fields: d => [
-      { k: 'customerId', l: 'Khách hàng', type: 'select', re: true, opts: tenantId() ? opts([get('customers', tenantId())], c => `${c.name}${isMember(c.id) ? ' ⭐ thành viên' : ''}`) : [['', 'Khách lẻ'], ...opts(S.customers, c => `${c.name}${isMember(c.id) ? ' ⭐ thành viên' : ''}`), ['_new', '＋ Khách hàng mới']] },
+      { k: 'customerId', l: 'Khách hàng', type: 'select', re: true, opts: tenantId() ? opts([get('customers', tenantId())], c => `${c.name}${isMember(c.id) ? ' ⭐ thành viên' : ''}`) : !adminNow() ? [['', 'Khách lẻ']] : [['', 'Khách lẻ'], ...opts(S.customers, c => `${c.name}${isMember(c.id) ? ' ⭐ thành viên' : ''}`), ['_new', '＋ Khách hàng mới']] },
       ...(d.customerId === '' ? [{ k: 'name', l: 'Họ tên', req: true }, { k: 'phone', l: 'Điện thoại', req: true }] : newCustomerFields(d)),
       { k: 'delivery', l: 'Nhận hàng', type: 'select', re: true, opts: [['pickup', 'Nhận tại nông trại (miễn phí)'], ['ship', `Giao tận nơi (${money(SHIP_FEE)})`]] },
       d.delivery === 'ship' && { k: 'address', l: 'Địa chỉ giao', req: true, def: (get('customers', d.customerId) || {}).address || '' },
@@ -462,10 +462,17 @@ function checkoutForm() {
         sub: q.sub, disc: q.disc, ship: q.ship, total: q.total };
       for (const x of lines) { const lot = get('lots', x.l.lotId); if (lot) { lot.remain = +(lot.remain - x.qty).toFixed(3); lot.moves.push({ date: o.date, type: 'sale', qty: x.qty, price: x.l.price, buyer: o.name, orderId: o.id }); } else x.l.stock = +(x.l.stock - x.qty).toFixed(3); }
       S.orders.push(o); UI.cart = [];
-      setTimeout(() => { location.hash = '#/orders'; }, 0);
+      setTimeout(() => orderPlaced(o), 0);
     },
     done: 'Đã tạo đơn hàng'
   });
+}
+function orderPlaced(o) {
+  if (adminNow() && !tenantId()) { location.hash = '#/orders'; return; }
+  const P = payCfg();
+  openPanel('Đặt hàng thành công · ' + o.code, `<table class="kv">${o.items.map(i => `<tr><td>${esc(i.title)}</td><td>× ${nf(i.qty, 2)} ${esc(i.unit)} = ${money(i.qty * i.price)}</td></tr>`).join('')}${o.disc ? `<tr><td>Ưu đãi thành viên</td><td>−${money(o.disc)}</td></tr>` : ''}${o.ship ? `<tr><td>Phí giao</td><td>${money(o.ship)}</td></tr>` : ''}<tr><td><b>Tổng</b></td><td><b>${money(o.total)}</b></td></tr></table>
+    ${o.pay === 'Chuyển khoản' && P.bin && P.account ? `<div class="payqr">${QR.svg(vietQR({ bin: P.bin, account: P.account, amount: o.total, purpose: o.code }), 180, 'QR thanh toán đơn hàng')}<table class="kv"><tr><td>Số tài khoản</td><td><b>${esc(P.account)}</b></td></tr><tr><td>Chủ TK</td><td>${esc(P.holder || '')}</td></tr><tr><td>Nội dung CK</td><td><b>${esc(o.code)}</b></td></tr></table></div>` : ''}
+    ${alertHtml({ lv: 'info', msg: 'Nông trại đã nhận đơn và sẽ liên hệ xác nhận. Giá, tồn kho được kiểm tra lại khi xác nhận đơn.' })}`);
 }
 function quote(lines, d) {
   const member = !!d.customerId && d.customerId !== '_new' && isMember(d.customerId);
@@ -499,7 +506,7 @@ function registerForm(id) {
     title: 'Đăng ký: ' + e.title, ok: 'Đăng ký', data: { customerId: tenantId(), qty: 1, paid: e.price > 0 && !tenantId() },
     intro: `<p class="muted" style="margin-top:0">${fd(e.date)} ${esc(e.time || '')} · còn ${left} chỗ · ${e.price ? money(e.price) + '/người' : 'Miễn phí'}</p>`,
     fields: d => [
-      { k: 'customerId', l: 'Người đăng ký', type: 'select', re: true, opts: tenantId() ? opts([get('customers', tenantId())]) : [['', 'Khách vãng lai'], ...opts(S.customers)] },
+      { k: 'customerId', l: 'Người đăng ký', type: 'select', re: true, opts: tenantId() ? opts([get('customers', tenantId())]) : !adminNow() ? [['', 'Khách vãng lai']] : [['', 'Khách vãng lai'], ...opts(S.customers)] },
       ...(d.customerId ? [] : [{ k: 'name', l: 'Họ tên', req: true }, { k: 'phone', l: 'Điện thoại', req: true }]),
       { k: 'qty', l: 'Số người', type: 'number', min: 1, req: true },
       e.price > 0 && !tenantId() && { k: 'paid', l: 'Đã thanh toán vé', type: 'checkbox' }
@@ -598,7 +605,7 @@ const SERVICE_ZONES = [
   { n: 'Ủ phân hữu cơ – biogas', ic: '♻️', x: 835, y: 505, w: 135, h: 95, z: 14, kind: 'bld', color: '#c9b79c' }
 ];
 function siteLayout() {
-  const us = S.units.slice().sort((a, b) => TYPE_ORDER[a.type] - TYPE_ORDER[b.type]);
+  const ord = S.zoneOrder || [], ix = u => { const i = ord.indexOf(u.id); return i < 0 ? 100 + TYPE_ORDER[u.type] : i; }, us = S.units.slice().sort((a, b) => ix(a) - ix(b));
   const rows = Math.max(1, Math.ceil(us.length / 2)), top = 60, bottom = 458, gap = 14, rh = (bottom - top - (rows - 1) * gap) / rows;
   return us.map((u, i) => {
     const col = i < rows ? 0 : 1, row = col ? i - rows : i, z = { u, letter: String.fromCharCode(65 + i), x: col ? 530 : 30, y: top + row * (rh + gap), w: 440, h: rh };
@@ -711,7 +718,7 @@ VIEWS.rent = {
     ${tab === 'map' ? `<div class="card"><div class="card-head"><div class="seg">${[['plan', '📐 Quy hoạch phân khu'], ['3d', '🏙️ Phối cảnh 3D'], ['grid', '▦ Danh sách lô']].map(([k, l]) => `<button class="${mode === k ? 'on' : ''}" data-act="rmap" data-k="${k}">${l}</button>`).join('')}</div><small class="muted">Bấm vào lô để xem thông tin / ký hợp đồng</small></div>
         ${mode === 'grid' ? (grid || empty('Chưa có lô cho thuê', '<button class="btn pri" data-act="newPlot">Tạo lô đầu tiên</button>')) : mode === '3d' ? sitePlan3D() : sitePlan2D()}${mapLegend}</div>
       ${mode !== 'grid' ? `<div class="card sec"><h3 style="margin-bottom:8px">Bảng quy hoạch phân khu</h3>${zoneTable()}<p class="muted" style="font-size:12px;margin-bottom:0">Khu dịch vụ chung: ${SERVICE_ZONES.map(s => s.ic + ' ' + s.n).join(' · ')}.</p></div>` : ''}`
-    : `<div class="grid g3">${RENT_PLANS.map(planCard).join('')}</div>`}`;
+    : `<div class="grid g3">${RENT_PLANS.filter(p => !p.hidden).map(planCard).join('')}</div>`}`;
   }
 };
 function planCard(p) {
@@ -806,7 +813,7 @@ function portalGarden(c) {
 }
 
 /* ------------------------ ĐĂNG NHẬP KHÁCH THUÊ ------------------------ */
-const TENANT_VIEWS = ['portal', 'market', 'events', 'info', 'trace'];
+const TENANT_VIEWS = ['portal', 'market', 'events', 'info', 'trace', 'seeds'];
 const tenantId = () => { let t = ''; try { t = sessionStorage.getItem('dht_tenant') || ''; } catch (e) { t = UI._tenant || ''; } return t && S && get('customers', t) ? t : ''; };
 function setTenant(id) { UI._tenant = id; try { if (id) sessionStorage.setItem('dht_tenant', id); else sessionStorage.removeItem('dht_tenant'); } catch (e) { /* phiên riêng tư */ } }
 VIEWS.login = {
@@ -834,7 +841,7 @@ function doLogin(u, code) {
 function tenantNav(t) {
   const c = get('customers', t);
   return `<div class="tenant-card"><small>Tài khoản khách thuê</small><b>${esc(c.name)}</b><small><code>${esc(c.username || '')}</code></small></div><div class="grp">Vườn của tôi</div>`
-    + [['portal/' + t, '🏡', 'Vườn & hợp đồng'], ['market', '🛒', 'Chợ nông trại'], ['events', '🎉', 'Sự kiện & thông báo'], ['info', 'ℹ️', 'Thông tin chung']].map(([k, ic, l]) => `<a href="#/${k}" class="${location.hash.startsWith('#/' + k.split('/')[0]) ? 'on' : ''}"><span>${ic}</span>${l}</a>`).join('')
+    + [['portal/' + t, '🏡', 'Vườn & hợp đồng'], ['market', '🛒', 'Chợ nông trại'], ['seeds', '🧬', 'Ngân hàng giống'], ['events', '🎉', 'Sự kiện & thông báo'], ['info', 'ℹ️', 'Thông tin chung']].map(([k, ic, l]) => `<a href="#/${k}" class="${location.hash.startsWith('#/' + k.split('/')[0]) ? 'on' : ''}"><span>${ic}</span>${l}</a>`).join('')
     + `<a href="#" data-act="logout"><span>🚪</span>Đăng xuất</a>`;
 }
 const authEl = document.createElement('button');
@@ -906,7 +913,7 @@ VIEWS.info = {
     <h2 class="sec" style="margin-bottom:10px">Các khu sản xuất</h2>
     <div class="grid g3">${S.units.map(u => { const b = unitBatch(u.id), free = S.plots.filter(p => p.unitId === u.id && p.status === 'free').length; return `<div class="card"><b>${FARM_TYPES[u.type].icon} ${esc(u.name)}</b><br><small class="muted">${nf(u.area)} m² · ${esc(u.location || '')}</small><p style="font-size:13px;margin:6px 0">${esc(u.note || '')}</p>${b ? `<small>Đang có: ${esc(sopOf(b).name)}</small><br>` : ''}${S.plots.some(p => p.unitId === u.id) ? `<small class="${free ? 't-ok' : 'muted'}">${free ? free + ' lô trống cho thuê' : 'Đã kín lô cho thuê'}</small>` : ''}</div>`; }).join('')}</div>
     <h2 class="sec" style="margin-bottom:10px">Gói thuê & bảng giá</h2>
-    <div class="grid g3">${RENT_PLANS.map(planCard).join('')}</div>
+    <div class="grid g3">${RENT_PLANS.filter(p => !p.hidden).map(planCard).join('')}</div>
     <div class="grid g2 sec">
       <div class="card"><h3 style="margin-bottom:8px">📜 Quy định khách thuê & tham quan</h3><ul class="clean">${String(I.rules || '').split('\n').filter(Boolean).map(r => `<li>${esc(r)}</li>`).join('')}</ul></div>
       <div class="card"><h3 style="margin-bottom:8px">❓ Câu hỏi thường gặp</h3>${FAQ.map(([q, a]) => `<details class="faq"><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join('')}</div>
@@ -1094,7 +1101,8 @@ function migrateExtra() {
   for (const c of S.customers) if (!c.username) { let u = suggestUser(c.name, c.phone), n = 1, base = u; while (S.customers.some(x => x !== c && x.username === u)) u = base + (++n); c.username = u; }
   S.contracts.forEach((c, i) => { if (!c.identity) c.identity = { sign: custName(c.customerId), color: ID_COLORS[i % ID_COLORS.length][0], icon: planOf(c.planId).icon, style: SIGN_STYLES[0] }; if (!c.packs) c.packs = Math.max(1, Math.round(c.qty / PACK)); });
   if (get('units', 'u1') && get('contracts', 'k1') && !S.demoLogin) setDemoLogin();
-  for (const k of ['plots', 'customers', 'contracts', 'invoices', 'requests', 'listings', 'orders', 'events', 'news', 'partners', 'bookings', 'pools', 'posts']) if (!Array.isArray(S[k])) S[k] = [];
+  for (const k of ['plots', 'customers', 'contracts', 'invoices', 'requests', 'listings', 'orders', 'events', 'news', 'partners', 'bookings', 'pools', 'posts', 'seeds', 'seedLots', 'seedOrders']) if (!Array.isArray(S[k])) S[k] = [];
+  if (!S.seedInit && typeof seedSeeds === 'function') { if (get('units', 'u1') && get('customers', 'c5') && !S.seeds.length) seedSeeds(n => addDays(today(), n)); S.seedInit = true; }
   if (!S.info || !S.info.intro) S.info = Object.assign(DEFAULT_INFO(), S.info || {});
   if (!S.rentInit) {
     if (get('units', 'u1') && get('batches', 'b1') && !S.plots.length) seedExtra(n => addDays(today(), n));
