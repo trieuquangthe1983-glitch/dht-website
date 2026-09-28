@@ -167,7 +167,7 @@ td .acts { display: flex; gap: 4px; justify-content: flex-end; }
 .device .ic { font-size: 22px; }
 .device .grow { flex: 1; min-width: 0; }
 .device.on { border-color: var(--primary); background: var(--ok-bg); }
-.switch { position: relative; width: 42px; height: 24px; flex-shrink: 0; }
+.switch { display: inline-block; position: relative; width: 42px; height: 24px; flex-shrink: 0; }
 .switch input { opacity: 0; width: 0; height: 0; }
 .switch span { position: absolute; inset: 0; background: var(--border); border-radius: 20px; cursor: pointer; transition: .2s; }
 .switch span::before { content: ""; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: .2s; }
@@ -408,3 +408,53 @@ body.public .admin-only, body.public .sim { display: none !important; }
 #cloudChip.ok { color: #1b7f3b; }
 #cloudChip.err { color: #b3261e; }
 #cloudChip[hidden], #adminBtn[hidden] { display: none !important; }
+
+/* ---- Trực tuyến 24/7 ---- */
+.chips { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+.live-hero { align-items: center; }
+.live-clock { display: grid; justify-items: center; gap: 2px; padding: 10px 16px; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); }
+.live-clock b { font-size: 28px; font-variant-numeric: tabular-nums; }
+.live-clock .dot { width: 10px; height: 10px; border-radius: 50%; background: #e53935; animation: livePulse 1.4s infinite; }
+@keyframes livePulse { 50% { opacity: .25; } }
+.cams { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; margin-top: 12px; }
+.cam { position: relative; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden; background: #111; color: #fff; }
+.cam.big { aspect-ratio: 16 / 9; margin-bottom: 12px; }
+.cam-view, .cam-view > * { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; object-fit: cover; display: block; }
+.cam-ov { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: space-between; pointer-events: none; }
+.cam-top { display: flex; justify-content: space-between; padding: 8px; font-size: 12px; font-variant-numeric: tabular-nums; }
+.cam-top > span { background: #000a; padding: 2px 8px; border-radius: 6px; }
+.cam-live { color: #ff5252; font-weight: 700; }
+.cam-live.is-sim { color: #ffd54f; }
+.cam-bot { padding: 22px 10px 8px; background: linear-gradient(transparent, #000d 38%); text-shadow: 0 1px 2px #000; }
+.cam-bot small { display: block; color: #e6ece8; }
+.cam-bot .chip { background: #ffffff26; color: #fff; }
+.cam-bot .chip.bad { background: #e5393599; }
+.cam-bot .chip.on { background: #2e7d3299; }
+.cam-zoom { position: absolute; right: 8px; top: 36px; background: #000a; color: #fff; border: 0; border-radius: 6px; padding: 4px 8px; cursor: pointer; }
+.cam-sim.night { filter: grayscale(.8) brightness(.9) contrast(1.15); }
+.cam-walk { animation: camWalk 6s ease-in-out infinite alternate; }
+.cam-sway { animation: camSway 4s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: bottom center; }
+.cam-drop { animation: camDrop 1.2s linear infinite; }
+.cam-spin { animation: camSpin 1s linear infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes camWalk { to { transform: translateX(22px); } }
+@keyframes camSway { from { transform: rotate(-4deg); } to { transform: rotate(4deg); } }
+@keyframes camDrop { from { transform: translateY(0); opacity: .9; } to { transform: translateY(40px); opacity: 0; } }
+@keyframes camSpin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .cam-walk, .cam-sway, .cam-drop, .cam-spin, .live-clock .dot { animation: none; } }
+.envc b { display: block; margin-bottom: 4px; }
+.timeline { display: grid; gap: 2px; }
+.tl { display: flex; gap: 8px; align-items: flex-start; padding: 6px 0; border-bottom: 1px dashed var(--border); font-size: 13px; }
+.tl-t { font-variant-numeric: tabular-nums; color: var(--muted); min-width: 42px; }
+.feed-scroll { max-height: 420px; overflow: auto; }
+.pick.dis { opacity: .5; }
+code.big { font-size: 16px; letter-spacing: 1px; user-select: all; }
+
+/* ---- Danh mục dịch vụ ---- */
+.svcs { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+.svc { display: flex; flex-direction: column; gap: 6px; }
+.svc p { margin: 0; font-size: 13px; }
+.svc-h { display: flex; gap: 10px; align-items: center; }
+.svc-h .pic { font-size: 28px; width: 48px; height: 48px; border-radius: 12px; background: var(--surface-2); display: grid; place-items: center; flex-shrink: 0; }
+.svc-inc { margin: 0; padding-left: 18px; font-size: 13px; color: var(--muted); }
+.svc-f { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: auto; padding-top: 6px; border-top: 1px solid var(--border); }
+.svc-f .price { font-size: 18px; }

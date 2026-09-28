@@ -7,7 +7,7 @@
    • Trang "Dữ liệu & cấu hình": gói thuê, điều khoản, quy hoạch & phân lô,
      hợp đồng, thanh toán, cổng thông tin, máy chủ & tài khoản
    ===================================================================== */
-const PUBLIC_VIEWS = ['info', 'events', 'market', 'seeds', 'trace', 'login', 'adminlogin'];
+const PUBLIC_VIEWS = ['info', 'live', 'services', 'events', 'market', 'seeds', 'trace', 'login', 'adminlogin'];
 const DEFAULT_PLANS = JSON.parse(JSON.stringify(RENT_PLANS)), DEFAULT_TERMS = COMMON_TERMS.slice(), DEFAULT_ZONES = JSON.parse(JSON.stringify(SERVICE_ZONES));
 const ss = { get: k => { try { return sessionStorage.getItem(k); } catch (e) { return UI['_ss_' + k] || null; } }, set: (k, v) => { UI['_ss_' + k] = v; try { if (v == null) sessionStorage.removeItem(k); else sessionStorage.setItem(k, v); } catch (e) { /* bỏ qua */ } } };
 const isAdmin = () => Cloud.isAdminSession() || ss.get('dht_admin') === '1';
@@ -37,7 +37,7 @@ document.querySelector('.top-actions').prepend(adminEl); document.querySelector(
 adminEl.addEventListener('click', () => { if (isAdmin()) ACT.adminLogout(); else location.hash = '#/adminlogin'; });
 chipEl.addEventListener('click', () => CloudSync.sync({ render: true }));
 function publicNav(v) {
-  const it = [['info', '🏡', 'Giới thiệu & bảng giá'], ['events', '🎉', 'Sự kiện & thông báo'], ['market', '🛒', 'Chợ nông trại'], ['seeds', '🧬', 'Ngân hàng con giống'], ['trace', '🔎', 'Truy xuất nguồn gốc']];
+  const it = [['info', '🏡', 'Giới thiệu & bảng giá'], ['live', '📡', 'Trực tuyến 24/7'], ['services', '🧾', 'Danh mục dịch vụ'], ['events', '🎉', 'Sự kiện & thông báo'], ['market', '🛒', 'Chợ nông trại'], ['seeds', '🧬', 'Ngân hàng con giống'], ['trace', '🔎', 'Truy xuất nguồn gốc']];
   return `<div class="grp">Nông trại</div>${it.map(([k, ic, l]) => `<a href="#/${k}" class="${v === k ? 'on' : ''}"><span>${ic}</span>${l}</a>`).join('')}<div class="grp">Tài khoản</div><a href="#/login" class="${v === 'login' ? 'on' : ''}"><span>👤</span>Khách thuê đăng nhập</a><a href="#/adminlogin" class="${v === 'adminlogin' ? 'on' : ''}"><span>🔐</span>Quản trị viên</a>`;
 }
 const _renderRent = render;
@@ -113,7 +113,7 @@ VIEWS.config = {
   title: 'Dữ liệu & cấu hình',
   render() {
     const t = UI.cfgTab;
-    const tabs = [['plans', '📋 Gói thuê'], ['terms', '📜 Điều khoản'], ['site', '🗺️ Quy hoạch & phân lô'], ['contracts', '📝 Hợp đồng'], ['pay', '💳 Thanh toán'], ['portal', '📰 Cổng thông tin & hợp tác'], ['server', '☁️ Máy chủ & tài khoản']];
+    const tabs = [['plans', '📋 Gói thuê'], ['terms', '📜 Điều khoản'], ['site', '🗺️ Quy hoạch & phân lô'], ['contracts', '📝 Hợp đồng'], ['pay', '💳 Thanh toán'], ['portal', '📰 Cổng thông tin & hợp tác'], ['live', '📡 Camera & trực tuyến'], ['services', '🧾 Dịch vụ'], ['server', '☁️ Máy chủ & tài khoản']];
     let body = '';
     if (t === 'plans') body = `<div class="card-head"><h3>Gói thuê (hiển thị trên bảng giá & hợp đồng mới)</h3><div class="acts"><button class="btn sm" data-act="resetPlans">↺ Mặc định</button><button class="btn sm pri" data-act="planEdit">＋ Gói mới</button></div></div>` + tbl(['Gói', 'Đối tượng', 'Loại hình', ['Đơn giá', 'r'], ['Giá/gói', 'r'], 'Tính phí', 'Dịch vụ', ['Đang thuê', 'r'], ''], RENT_PLANS.map(p => `<tr><td>${esc(p.icon)} <b>${esc(p.n)}</b>${p.hidden ? ' ' + badge('Ẩn') : ''}</td><td><small>${esc(p.seg)}</small></td><td>${p.type ? esc(FARM_TYPES[p.type].n) : 'Mọi khu'}</td><td class="r num">${p.price ? money(p.price) + '/' + esc(p.unit) : '—'}</td><td class="r num">${p.price ? money(packPrice(p)) : nf(p.sharePct) + '% SL'}</td><td>${esc(BILLING[p.billing])}</td><td>${esc(SERVICE[p.service])}</td><td class="r num">${S.contracts.filter(c => c.planId === p.id && c.status === 'active').length}</td><td>${acts(editBtn('planEdit', p.id), S.contracts.some(c => c.planId === p.id) ? '' : `<button class="btn sm danger" data-act="planDel" data-id="${p.id}" aria-label="Xóa">🗑</button>`)}</td></tr>`));
     else if (t === 'terms') body = `<h3>Điều khoản chung của mọi hợp đồng thuê</h3><p class="muted" style="font-size:13px">Mỗi dòng là một điều khoản. Điều khoản riêng từng gói sửa trong tab Gói thuê. Hợp đồng đã ký giữ nguyên điều khoản tại thời điểm ký.</p><form id="termsForm"><textarea name="terms" style="min-height:280px">${esc(COMMON_TERMS.join('\n'))}</textarea><div class="form-actions" style="justify-content:flex-start"><button class="btn pri">Lưu điều khoản</button><button class="btn" type="button" data-act="resetTerms">↺ Mặc định</button></div></form>`;
@@ -128,12 +128,14 @@ VIEWS.config = {
     }
     else if (t === 'contracts') body = `<div class="card-head"><h3>Sửa hợp đồng với khách hàng</h3><button class="btn sm pri" data-act="newContract">＋ Hợp đồng mới</button></div>` + tbl(['Mã HĐ', 'Khách', 'Gói · lô', 'Thời hạn', ['Giá trị', 'r'], 'Trạng thái', ''], S.contracts.slice().sort((a, b) => b.start.localeCompare(a.start)).map(c => `<tr><td><b>${esc(c.code)}</b></td><td>${esc(custName(c.customerId))}</td><td>${planOf(c.planId).icon} ${esc(planOf(c.planId).n)} · ${esc((get('plots', c.plotId) || {}).code || '')}</td><td>${fds(c.start)} → ${fd(c.end)}</td><td class="r num">${short(c.sub != null ? c.sub : contractValue(c))}</td><td>${cStatus(c)}</td><td>${acts(`<button class="btn sm" data-act="contractEdit" data-id="${c.id}">✎ Sửa</button>`, `<button class="btn sm" data-act="contractDoc" data-id="${c.id}">📄</button>`)}</td></tr>`), 'Chưa có hợp đồng');
     else if (t === 'pay') { const P = payCfg(); body = `<h3>Thông tin thanh toán & thuế</h3><form id="payCfgForm" class="form-grid" style="max-width:720px;margin-top:10px"><label class="f"><span>Ngân hàng nhận tiền</span><select name="bin"><option value="">— Chọn ngân hàng —</option>${BANKS.map(([b, n]) => `<option value="${b}" ${P.bin === b ? 'selected' : ''}>${n} (${b})</option>`).join('')}</select></label><label class="f"><span>Số tài khoản</span><input name="account" value="${esc(P.account)}" inputmode="numeric"></label><label class="f"><span>Chủ tài khoản</span><input name="holder" value="${esc(P.holder)}"></label><label class="f"><span>Thuế GTGT tiền thuê (%)</span><input name="vat" type="number" step="any" min="0" value="${esc(P.vat)}"></label><div class="full form-actions" style="justify-content:flex-start"><button class="btn pri">Lưu</button></div></form>${P.bin && P.account ? `<div class="payqr">${QR.svg(vietQR({ bin: P.bin, account: P.account, amount: 100000, purpose: 'THU QR' }), 140, 'QR thử')}<small class="muted">QR thử 100.000 ₫ — quét để kiểm tra tên chủ tài khoản.</small></div>` : ''}`; }
+    else if (t === 'live') body = cfgLiveHtml();
+    else if (t === 'services') body = cfgSvcHtml();
     else if (t === 'portal') {
       const L = (h, ic, n, s) => `<a class="card batch" href="${h}"><b>${ic} ${n}</b><small class="muted">${s}</small></a>`;
       body = `<h3 style="margin-bottom:10px">Nội dung công khai & dữ liệu hợp tác</h3><div class="grid g3">
         <button class="card batch" data-act="editInfo" style="text-align:left;font:inherit;color:inherit"><b>🏡 Giới thiệu, giờ mở cửa, quy định</b><small class="muted">Sửa thông tin cổng thông tin</small></button>
         ${L('#/events', '🎉', 'Sự kiện & thông báo', `${S.events.length} sự kiện · ${S.news.length} thông báo`)}${L('#/market', '🛒', 'Gian hàng chợ nông trại', `${S.listings.length} sản phẩm`)}
-        ${L('#/seedadmin', '🧬', 'Ngân hàng con giống', `${S.seeds.length} giống · ${S.seedLots.length} lô`)}${L('#/partners', '🤝', 'Đối tác liên kết', `${S.partners.length} đối tác`)}${L('#/sharing', '🚜', 'Chia sẻ máy móc', `${S.bookings.length} lịch`)}
+        ${L('#/seedadmin', '🧬', 'Ngân hàng con giống', `${S.seeds.length} giống · ${S.seedLots.length} lô`)}${L('#/live', '📡', 'Cổng trực tuyến 24/7', `${S.cams.length} camera`)}${L('#/gateway', '🔌', 'Cổng tự động hóa', `${S.gateways.length} bộ điều khiển · ${S.careSched.length} lịch`)}${L('#/services', '🧾', 'Danh mục dịch vụ', `${S.services.length} dịch vụ`)}${L('#/partners', '🤝', 'Đối tác liên kết', `${S.partners.length} đối tác`)}${L('#/sharing', '🚜', 'Chia sẻ máy móc', `${S.bookings.length} lịch`)}
         ${L('#/pools', '💹', 'Góp vốn theo lứa', `${S.pools.length} đợt`)}${L('#/community', '💬', 'Cộng đồng', `${S.posts.length} bài viết`)}${L('#/contracts', '👥', 'Khách hàng & hóa đơn', `${S.customers.length} khách`)}</div>`;
     }
     else {

@@ -58,7 +58,9 @@ const EMPTY = () => ({
   plots: [], customers: [], contracts: [], invoices: [], requests: [], listings: [], orders: [],
   events: [], news: [], partners: [], bookings: [], pools: [], posts: [], info: {},
   /* Ngân hàng con giống (seeds.js) */
-  seeds: [], seedLots: [], seedOrders: []
+  seeds: [], seedLots: [], seedOrders: [],
+  /* Trực tuyến, cổng tự động hóa, dịch vụ (live.js) */
+  cams: [], gateways: [], gwCmds: [], careSched: [], services: [], svcBookings: []
 });
 function load() { try { const r = localStorage.getItem(KEY); return r ? Object.assign(EMPTY(), JSON.parse(r)) : null; } catch (e) { return null; } }
 function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* bộ nhớ bị chặn/đầy: vẫn chạy trong phiên */ } }

@@ -81,8 +81,14 @@ const Cloud = (() => {
     markInbox: ids => ids.length ? http('/rest/v1/farm_inbox?id=' + encodeURIComponent(`in.(${ids.join(',')})`), { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: { processed: true, processed_at: new Date().toISOString() } }) : null,
     async loadPublic() { const r = await http('/rest/v1/farm_public?id=eq.main&select=data,updated_at', { auth: false }); return (r && r[0]) || null; },
     submitAnon: (kind, payload) => http('/rest/v1/farm_inbox', { method: 'POST', auth: false, headers: { Prefer: 'return=minimal' }, body: { kind, payload } }),
+    pushGateways: async rows => { if (rows.length) await http('/rest/v1/farm_gateways?on_conflict=id', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' }, body: rows }); await http('/rest/v1/farm_gateways?id=' + encodeURIComponent(rows.length ? `not.in.(${rows.map(r => '"' + r.id + '"').join(',')})` : 'not.is.null'), { method: 'DELETE', headers: { Prefer: 'return=minimal' } }); },
+    pullGateways: () => http('/rest/v1/farm_gateways?select=id,last_seen,info'),
+    pushCmds: rows => http('/rest/v1/farm_gw_cmds?select=id', { method: 'POST', headers: { Prefer: 'return=representation' }, body: rows }),
+    pullCmds: ids => ids.length ? http('/rest/v1/farm_gw_cmds?select=id,status,done_at,result&id=' + encodeURIComponent(`in.(${ids.join(',')})`)) : [],
+    pullGwReadings: () => http('/rest/v1/farm_gw_readings?processed=eq.false&order=id.asc&limit=500&select=id,gw_id,unit_id,vals,ts'),
+    markGwReadings: ids => ids.length ? http('/rest/v1/farm_gw_readings?id=' + encodeURIComponent(`in.(${ids.join(',')})`), { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: { processed: true } }) : null,
     tenantLogin: (u, c) => http('/rest/v1/rpc/farm_tenant_login', { method: 'POST', auth: false, body: { p_user: u, p_code: c } }),
-    tenantSubmit: (u, c, kind, payload) => http('/rest/v1/rpc/farm_tenant_submit', { method: 'POST', auth: false, body: { p_user: u, p_code: c, p_kind: kind, p_payload: payload } })
+    async tenantSubmit(u, c, kind, payload) { const id = await http('/rest/v1/rpc/farm_tenant_submit', { method: 'POST', auth: false, body: { p_user: u, p_code: c, p_kind: kind, p_payload: payload } }); if (id == null) throw new Error('Sai tên đăng nhập hoặc mã truy cập'); return id; }
   };
   return api;
 })();
@@ -110,7 +116,12 @@ function buildPublic() {
     listings: S.listings.filter(l => l.active).map(l => ({ ...l, stock: listingStock(l), blockedUntil: listingBlocked(l) || '' })),
     lots: S.lots.filter(l => lotIds.has(l.id)).map(l => pick(l, ['id', 'code', 'date', 'remain', 'product', 'unit', 'grade', 'expiry'])),
     events: S.events.map(e => ({ ...e, regs: [{ qty: sum(e.regs, r => r.qty), agg: true }] })),
-    news: S.news, seeds: S.seeds.filter(s => s.active), seedLots: S.seedLots.map(l => pick(l, ['id', 'seedId', 'code', 'qty', 'allocated', 'readyDate', 'quarantine'])),
+    news: S.news, seeds: S.seeds.filter(s => s.active),
+    cams: S.cams.filter(c => c.access === 'public' && c.on !== false).map(c => pick(c, ['id', 'name', 'unitId', 'kind', 'url', 'access', 'on'])),
+    readings: S.units.map(u => latest(u.id)).filter(Boolean).map(r => { const x = { ...r }; delete x.id; return x; }),
+    devices: S.devices.filter(d => S.units.some(u => u.id === d.tid)).map(d => pick(d, ['id', 'tid', 'kind', 'name', 'on', 'onUntil'])),
+    careSched: S.careSched.filter(s => s.en).map(s => pick(s, ['id', 'name', 'unitId', 'devId', 'time', 'dur', 'days', 'en', 'lastRun'])),
+    liveFeedPub: liveFeed(Date.now() - DAY, true), services: S.services.filter(s => !s.hidden), liveInit: true, seedLots: S.seedLots.map(l => pick(l, ['id', 'seedId', 'code', 'qty', 'allocated', 'readyDate', 'quarantine'])),
     traceDocs
   };
 }
@@ -129,7 +140,9 @@ function buildTenants() {
         eventRegs: S.events.flatMap(e => e.regs.filter(r => r.customerId === c.id).map(r => ({ eventId: e.id, ...r }))),
         batches: bs, tasks: S.tasks.filter(t => bids.has(t.batchId)), logs: S.logs.filter(l => bids.has(l.batchId)),
         lots: S.lots.filter(l => bids.has(l.batchId)).map(l => ({ ...l, moves: l.moves.filter(m => m.type === 'deliver') })),
-        plots: S.plots.filter(p => cs.some(k => k.plotId === p.id)), readings
+        plots: S.plots.filter(p => cs.some(k => k.plotId === p.id)), readings,
+        cams: S.cams.filter(x => x.access === 'tenant' && x.on !== false && S.plots.some(p => p.unitId === x.unitId && cs.some(k => k.plotId === p.id && ['active', 'pending'].includes(k.status)))).map(x => pick(x, ['id', 'name', 'unitId', 'kind', 'url', 'access', 'on'])),
+        svcBookings: S.svcBookings.filter(b => b.customerId === c.id)
       }
     };
   });
@@ -145,6 +158,7 @@ function applyInbox(rows) {
       if (r.kind === 'order' && p.order) n += inOrder(p.order, cid);
       else if (r.kind === 'seed_order' && p.order) n += inSeedOrder(p.order, cid);
       else if (r.kind === 'event_reg') n += inEventReg(p, cid);
+      else if (r.kind === 'service_req' && p.booking) n += inSvcBooking(p.booking, cid);
       else if (r.kind === 'request' && cid && p.request) n += inRequest(p.request, cid);
       else if (r.kind === 'task_done' && cid) n += inTaskDone(p, cid);
     } catch (e) { console.warn('[DHT] Bỏ qua dữ liệu inbox #' + r.id, e); }
@@ -177,6 +191,14 @@ function inSeedOrder(o, cid) {
   S.seedOrders.push({ id: uid(), code: codeOk ? o.code : code('DG'), date: today(), customerId: cid, name: cust ? cust.name : clip(o.name, 80), phone: cust ? cust.phone : clip(o.phone, 20), address: clip(o.address, 200), seedId: s.id, seedName: s.name, unit: s.unit, qty, price: s.price, total, deposit: Math.round(total * (s.depositPct || 0) / 100), wantDate, delivery: o.delivery === 'ship' ? 'ship' : 'pickup', note: clip(o.note, 300) + (al ? '' : ' ⚠ Chưa đủ giống cho ngày yêu cầu — cần liên hệ khách'), allocations: al || [], status: 'Mới', paid: '', source: 'web' });
   return 1;
 }
+function inSvcBooking(o, cid) {
+  const s = get('services', o.serviceId); if (!s || s.hidden || s.bookable === false || (s.aud === 'tenant' && !cid)) return 0;
+  const qty = Math.min(Math.max(0, +o.qty || 0), 100000); if (!qty) return 0;
+  const c = get('customers', cid), wantDate = /^\d{4}-\d{2}-\d{2}$/.test(o.wantDate || '') ? o.wantDate : today();
+  const codeOk = /^DV[0-9]{6}-[A-Z0-9]{3}$/.test(o.code || '') && !S.svcBookings.some(x => x.code === o.code);
+  S.svcBookings.push({ id: uid(), code: codeOk ? o.code : code('DV'), date: today(), serviceId: s.id, svcName: s.n, unit: s.unit, qty, price: s.price, total: Math.round(qty * s.price), wantDate, customerId: cid, name: c ? c.name : clip(o.name, 80), phone: c ? c.phone : clip(o.phone, 20), note: clip(o.note, 500), status: 'Mới', source: 'web' });
+  return 1;
+}
 function inEventReg(p, cid) {
   const e = get('events', p.eventId), reg = p.reg || {}; if (!e) return 0;
   const left = e.capacity - sum(e.regs, r => r.qty), qty = Math.min(Math.max(1, Math.round(+reg.qty || 1)), left);
@@ -198,6 +220,34 @@ function inTaskDone(p, cid) {
   const t = get('tasks', p.taskId), b = t && get('batches', t.batchId), c = b && get('contracts', b.contractId);
   if (!c || c.customerId !== cid || !t.byCustomer) return 0;
   t.done = !!p.done; t.doneAt = t.done ? Date.now() : null; return 1;
+}
+
+/* ---------------- CỔNG TỰ ĐỘNG HÓA: bộ điều khiển ↔ máy chủ ---------------- */
+const CMD_MAP = { pending: 'Đã lên máy chủ', sent: 'Đã gửi', done: 'Đã thực hiện', error: 'Lỗi', expired: 'Hết hạn' };
+async function gwSync() {
+  let ch = false;
+  const real = S.gateways.filter(g => !g.sim && g.tokenHash);
+  const sig = JSON.stringify(real.map(g => [g.id, g.name, g.salt, g.tokenHash]));
+  if (sig !== S.gwSig) { await Cloud.pushGateways(real.map(g => ({ id: g.id, name: g.name, salt: g.salt, token_hash: g.tokenHash }))); S.gwSig = sig; ch = true; }
+  if (!real.length) return ch;
+  const ids = new Set(real.map(g => g.id));
+  for (const r of await Cloud.pullGateways() || []) { const g = get('gateways', r.id); if (g && r.last_seen) { const t = new Date(r.last_seen).getTime(); if (t !== g.lastSeen) { g.lastSeen = t; g.info = r.info || {}; ch = true; } } }
+  const out = S.gwCmds.filter(c => c.status === 'Chờ gửi' && ids.has(c.gwId) && !c.sid);
+  if (out.length) {
+    const res = await Cloud.pushCmds(out.map(c => ({ gw_id: c.gwId, dev_id: c.devId, act: c.act, dur: c.dur || 0 })));
+    out.forEach((c, i) => { if (res && res[i]) { c.sid = res[i].id; c.status = 'Đã lên máy chủ'; } }); ch = true;
+  }
+  const open = S.gwCmds.filter(c => c.sid && ['Đã lên máy chủ', 'Đã gửi'].includes(c.status));
+  for (const r of await Cloud.pullCmds(open.map(c => c.sid)) || []) { const c = open.find(x => x.sid === r.id), st = CMD_MAP[r.status]; if (c && st && st !== c.status) { c.status = st; c.result = r.result || ''; if (r.done_at) c.doneAt = new Date(r.done_at).getTime(); ch = true; } }
+  const rd = await Cloud.pullGwReadings() || [];
+  for (const r of rd) {
+    const g = get('gateways', r.gw_id), vals = {};
+    if (!g || !get('units', r.unit_id)) continue;
+    for (const [k, v] of Object.entries(r.vals || {})) if (PARAMS[k] && Number.isFinite(+v)) vals[k] = +(+v).toFixed(PARAMS[k].d);
+    if (Object.keys(vals).length) { addReading(r.unit_id, vals, 'sensor'); ch = true; }
+  }
+  if (rd.length) await Cloud.markGwReadings(rd.map(r => r.id));
+  return ch;
 }
 
 /* --------------------------- ĐỒNG BỘ QUẢN TRỊ --------------------------- */
@@ -228,6 +278,7 @@ const CloudSync = {
         await Cloud.markInbox(inbox.map(r => r.id)); m.dirty = true;
         if (n) toast(`📥 Đã nhận ${n} đơn/yêu cầu mới từ website`);
       }
+      try { if (await gwSync()) m.dirty = true; } catch (e) { if (e.status !== 404) console.warn('[DHT] Cổng tự động hóa', e); }
       if (m.dirty || o.force) {
         const v = await Cloud.pushState(exportState(), srv ? m.version : 0);
         if (v === -1) { this.busy = false; return this.sync(o); }
@@ -253,13 +304,15 @@ function fromPublic(pub) {
 function applyTenant(s, slice) {
   const d = slice.data || {}, merge = (k, arr) => { const ids = new Set((arr || []).map(x => x.id)); s[k] = [...s[k].filter(x => !ids.has(x.id)), ...(arr || [])]; };
   s.customers = d.customer ? [d.customer] : [];
-  ['contracts', 'invoices', 'requests', 'orders', 'seedOrders', 'tasks', 'logs', 'readings'].forEach(k => { s[k] = d[k] || []; });
+  ['contracts', 'invoices', 'requests', 'orders', 'seedOrders', 'tasks', 'logs', 'svcBookings'].forEach(k => { s[k] = d[k] || []; });
+  const rs = d.readings || [], rt = new Set(rs.map(r => r.tid)); s.readings = [...s.readings.filter(r => !rt.has(r.tid)), ...rs];
+  merge('cams', d.cams);
   merge('batches', d.batches); merge('lots', d.lots); merge('plots', d.plots);
   for (const r of d.eventRegs || []) { const e = s.events.find(x => x.id === r.eventId); if (!e) continue; const agg = e.regs.find(x => x.agg); if (agg) agg.qty = Math.max(0, agg.qty - r.qty); e.regs.push({ ...r, _b: true }); }
   return s;
 }
 function baseline() {
-  UI.base = { orders: new Set(S.orders.map(x => x.id)), seedOrders: new Set(S.seedOrders.map(x => x.id)), requests: new Set(S.requests.map(x => x.id)), tasks: new Map(S.tasks.map(t => [t.id, !!t.done])) };
+  UI.base = { orders: new Set(S.orders.map(x => x.id)), seedOrders: new Set(S.seedOrders.map(x => x.id)), svcBookings: new Set(S.svcBookings.map(x => x.id)), requests: new Set(S.requests.map(x => x.id)), tasks: new Map(S.tasks.map(t => [t.id, !!t.done])) };
   S.events.forEach(e => e.regs.forEach(r => { r._b = true; }));
 }
 async function loadRemote(mode) {
@@ -279,6 +332,7 @@ async function flushOutbox() {
   const B = UI.base, out = UI.outbox || (UI.outbox = []);
   S.orders.filter(o => !B.orders.has(o.id)).forEach(o => { B.orders.add(o.id); out.push(['order', { order: o }]); });
   S.seedOrders.filter(o => !B.seedOrders.has(o.id)).forEach(o => { B.seedOrders.add(o.id); out.push(['seed_order', { order: o }]); });
+  S.svcBookings.filter(o => !B.svcBookings.has(o.id)).forEach(o => { B.svcBookings.add(o.id); out.push(['service_req', { booking: o }]); });
   S.requests.filter(r => !B.requests.has(r.id)).forEach(r => { B.requests.add(r.id); out.push(['request', { request: r }]); });
   S.events.forEach(e => e.regs.forEach(r => { if (!r._b) { r._b = true; out.push(['event_reg', { eventId: e.id, reg: pick(r, ['name', 'phone', 'qty']) }]); } }));
   S.tasks.forEach(t => { if (B.tasks.has(t.id) && B.tasks.get(t.id) !== !!t.done) { B.tasks.set(t.id, !!t.done); out.push(['task_done', { taskId: t.id, done: !!t.done }]); } });
@@ -287,9 +341,12 @@ async function flushOutbox() {
     const [kind, payload] = out[0];
     try {
       if (UI.remoteState === 'tenant' && cr) await Cloud.tenantSubmit(cr.u, cr.c, kind, payload);
-      else if (['order', 'seed_order', 'event_reg'].includes(kind)) await Cloud.submitAnon(kind, payload);
+      else if (['order', 'seed_order', 'event_reg', 'service_req'].includes(kind)) await Cloud.submitAnon(kind, payload);
       out.shift();
-    } catch (e) { toast('⚠️ Chưa gửi được lên máy chủ: ' + e.message + ' — sẽ thử lại'); setTimeout(flushOutbox, 15000); return; }
+    } catch (e) {
+      if (e.status >= 400 && e.status < 500) { out.shift(); toast('⚠️ Máy chủ từ chối dữ liệu: ' + e.message); continue; }   /* dữ liệu không hợp lệ: bỏ, không chặn hàng đợi */
+      toast('⚠️ Chưa gửi được lên máy chủ: ' + e.message + ' — sẽ thử lại'); setTimeout(flushOutbox, 15000); return;
+    }
   }
 }
 

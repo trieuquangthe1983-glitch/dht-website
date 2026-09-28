@@ -813,7 +813,7 @@ function portalGarden(c) {
 }
 
 /* ------------------------ ĐĂNG NHẬP KHÁCH THUÊ ------------------------ */
-const TENANT_VIEWS = ['portal', 'market', 'events', 'info', 'trace', 'seeds'];
+const TENANT_VIEWS = ['portal', 'market', 'events', 'info', 'trace', 'seeds', 'live', 'services'];
 const tenantId = () => { let t = ''; try { t = sessionStorage.getItem('dht_tenant') || ''; } catch (e) { t = UI._tenant || ''; } return t && S && get('customers', t) ? t : ''; };
 function setTenant(id) { UI._tenant = id; try { if (id) sessionStorage.setItem('dht_tenant', id); else sessionStorage.removeItem('dht_tenant'); } catch (e) { /* phiên riêng tư */ } }
 VIEWS.login = {
@@ -841,7 +841,7 @@ function doLogin(u, code) {
 function tenantNav(t) {
   const c = get('customers', t);
   return `<div class="tenant-card"><small>Tài khoản khách thuê</small><b>${esc(c.name)}</b><small><code>${esc(c.username || '')}</code></small></div><div class="grp">Vườn của tôi</div>`
-    + [['portal/' + t, '🏡', 'Vườn & hợp đồng'], ['market', '🛒', 'Chợ nông trại'], ['seeds', '🧬', 'Ngân hàng giống'], ['events', '🎉', 'Sự kiện & thông báo'], ['info', 'ℹ️', 'Thông tin chung']].map(([k, ic, l]) => `<a href="#/${k}" class="${location.hash.startsWith('#/' + k.split('/')[0]) ? 'on' : ''}"><span>${ic}</span>${l}</a>`).join('')
+    + [['portal/' + t, '🏡', 'Vườn & hợp đồng'], ['live', '📡', 'Trực tuyến 24/7'], ['services', '🧾', 'Dịch vụ'], ['market', '🛒', 'Chợ nông trại'], ['seeds', '🧬', 'Ngân hàng giống'], ['events', '🎉', 'Sự kiện & thông báo'], ['info', 'ℹ️', 'Thông tin chung']].map(([k, ic, l]) => `<a href="#/${k}" class="${location.hash.startsWith('#/' + k.split('/')[0]) ? 'on' : ''}"><span>${ic}</span>${l}</a>`).join('')
     + `<a href="#" data-act="logout"><span>🚪</span>Đăng xuất</a>`;
 }
 const authEl = document.createElement('button');
