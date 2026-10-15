@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DHT Thảo Dược – Kho bài thuốc &amp; dược liệu</title>
+<meta name="description" content="Tra cứu nhanh bài thuốc thảo dược theo bệnh, nhận biết dược liệu, bài thuốc bồi bổ, cảnh báo an toàn theo thể trạng. Hoạt động offline, cập nhật định kỳ.">
+<meta name="theme-color" content="#2f6b3c">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="#/"><img src="icon.svg" width="30" height="30" alt=""><span><b>DHT Thảo Dược</b><small>Kho bài thuốc &amp; dược liệu</small></span></a>
+  <form class="search" id="searchForm" role="search" autocomplete="off">
+    <input id="q" type="search" placeholder="Tìm bệnh, triệu chứng, bài thuốc, vị thuốc… (vd: ho, mất ngủ, gừng)" aria-label="Tìm kiếm" enterkeyhint="search">
+    <button type="submit" aria-label="Tìm">🔍</button>
+  </form>
+  <button class="profile-btn" id="profileBtn" title="Hồ sơ an toàn">🛡️<span id="profileCount"></span></button>
+</header>
+<nav class="tabs" id="tabs"></nav>
+<div class="banner" id="banner">⚠️ Thông tin chỉ mang tính tham khảo, <b>không thay thế chẩn đoán và điều trị của bác sĩ/thầy thuốc</b>. Có dấu hiệu nặng hãy đến cơ sở y tế.</div>
+<main id="view" tabindex="-1"></main>
+<div class="modal" id="modal" hidden><div class="sheet" role="dialog" aria-modal="true" id="sheet"></div></div>
+<div class="toast" id="toast" role="status"></div>
+<script src="data.js"></script>
+<script src="data-rau.js"></script>
+<script src="data-kampo.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
