@@ -40,7 +40,7 @@ function build(){
     r._cd=[...s];
     r._names=r.tp.map(t=>t[0]==="_"?t[2]:(H.get(t[0])||{ten:t[0]}).ten);
   });
-  DB.herbs.forEach(h=>{h._r=DB.remedies.filter(r=>r.tp.some(t=>t[0]===h.id))});
+  DB.herbs.forEach(h=>{h.img=(window.DHT_IMG||{})[h.id]||h.img;h._r=DB.remedies.filter(r=>r.tp.some(t=>t[0]===h.id))});
   DB.diseases.forEach(d=>{d._r=DB.remedies.filter(r=>(r.benh||[]).includes(d.id)).sort(byRank)});
   index();
 }
@@ -103,7 +103,7 @@ function remedyCard(r){
   <button class="fav ${f?"on":""}" data-fav="${esc(r.id)}" aria-label="Yêu thích">${f?"★":"☆"}</button></a>`}
 function herbCard(h){
   const c=conflicts(h.cd);
-  return`<a class="card" href="#/thao-duoc/${esc(h.id)}"><span class="em">${esc(h.e||"🌿")}</span><h4>${esc(h.ten)}</h4>${h.latin?`<p><i>${esc(h.latin)}</i></p>`:""}
+  return`<a class="card" href="#/thao-duoc/${esc(h.id)}">${h.img?`<img class="thumb" src="${esc(h.img)}" alt="" loading="lazy">`:`<span class="em">${esc(h.e||"🌿")}</span>`}<h4>${esc(h.ten)}</h4>${h.latin?`<p><i>${esc(h.latin)}</i></p>`:""}
   <p>${esc((h.congDung||[])[0]||"")}</p>
   <div class="meta">${h.tinh?`<span class="tag">${esc(h.tinh)}</span>`:""}${h.vi?`<span class="tag">${esc(h.vi)}</span>`:""}${h.nguon==="bo-y-te"?srcTag(h):""}${newTag(h)}${c.length?'<span class="tag r">⚠ Lưu ý với hồ sơ của bạn</span>':""}</div></a>`}
 function diseaseCard(d){return`<a class="card" href="#/benh/${esc(d.id)}"><h4>${esc(d.ten)}</h4><p>${esc((d.mota||"").slice(0,95))}…</p>
@@ -195,6 +195,7 @@ function viewHerb(id){
   return`<div class="crumb"><a href="javascript:history.back()">← Quay lại</a></div>
   <h2 style="margin:6px 0">${esc(h.e||"")} ${esc(h.ten)}</h2>${h.latin?`<p style="margin:0;color:var(--mut)"><i>${esc(h.latin)}</i>${h.ho?" — "+esc(h.ho):""}</p>`:""}
   <div class="meta"><span class="tag">${esc(DB.groups[h.nhom]||"")}</span>${h.tinh?`<span class="tag">Tính: ${esc(h.tinh)}</span>`:""}${h.vi?`<span class="tag">Vị: ${esc(h.vi)}</span>`:""}${h.nguon==="bo-y-te"?srcTag(h):""}${newTag(h)}</div>
+  ${h.img?`<figure class="plate"><img src="${esc(h.img)}" alt="Hình minh họa ${esc(h.ten)}"><figcaption>Hình minh họa: sách “Cây rau cây thuốc”, Bộ Y tế – Vụ Y học cổ truyền, 2005</figcaption></figure>`:""}
   ${safetyBox(h.cd,"Dược liệu này")}
   <div class="box"><dl class="dl"><dt>Tên gọi khác</dt><dd>${esc((h.khac||[]).join(", ")||"—")}</dd><dt>Bộ phận dùng</dt><dd>${esc(h.bo)}</dd>
   <dt>Công dụng</dt><dd><ul style="margin:0;padding-left:18px">${(h.congDung||[]).map(x=>`<li>${esc(x)}</li>`).join("")}</ul></dd>

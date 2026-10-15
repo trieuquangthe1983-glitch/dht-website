@@ -2659,3 +2659,6 @@ DHT_EXTEND({
 }
 ]
 });
+
+/* Ảnh minh họa cắt từ sách (img/<id>.jpg). */
+window.DHT_IMG={"bac-ha": "img/bac-ha.jpg", "bi-ngo": "img/bi-ngo.jpg", "bi-xanh": "img/bi-xanh.jpg", "cai-canh": "img/cai-canh.jpg", "cai-cu": "img/cai-cu.jpg", "can-tay": "img/can-tay.jpg", "dau-van-trang": "img/dau-van-trang.jpg", "diep-ca": "img/diep-ca.jpg", "gai": "img/gai.jpg", "gung": "img/gung.jpg", "hanh": "img/hanh.jpg", "he": "img/he.jpg", "hung-chanh": "img/hung-chanh.jpg", "hung-gioi": "img/hung-gioi.jpg", "kinh-gioi": "img/kinh-gioi.jpg", "ky-tu": "img/ky-tu.jpg", "la-lot": "img/la-lot.jpg", "ma-de": "img/ma-de.jpg", "mo-tam-the": "img/mo-tam-the.jpg", "mong-toi": "img/mong-toi.jpg", "mui": "img/mui.jpg", "muop": "img/muop.jpg", "muop-dang": "img/muop-dang.jpg", "nghe": "img/nghe.jpg", "rau-ma": "img/rau-ma.jpg", "rau-ngot": "img/rau-ngot.jpg", "rau-ram": "img/rau-ram.jpg", "rieng": "img/rieng.jpg", "tho-cao-ly-sam": "img/tho-cao-ly-sam.jpg", "tia-to": "img/tia-to.jpg", "to": "img/to.jpg"};
