@@ -1,4 +1,4 @@
-const V="thao-duoc-v1",FILES=["./","index.html","app.css","app.js","data.js","icon.svg","manifest.webmanifest"];
+const V="thao-duoc-v2",FILES=["./","index.html","app.css","app.js","data.js","data-rau.js","data-kampo.js","icon.svg","manifest.webmanifest"];
 self.addEventListener("install",e=>{e.waitUntil(caches.open(V).then(c=>c.addAll(FILES)).then(()=>self.skipWaiting()))});
 self.addEventListener("activate",e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==V).map(x=>caches.delete(x)))).then(()=>self.clients.claim()))});
 self.addEventListener("fetch",e=>{

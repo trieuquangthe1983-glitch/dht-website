@@ -49,4 +49,16 @@ Mã cd: `thai bu tre ha dd cd dayday gan mach di`.
 
 - **Máy chủ** (Supabase đã dùng trong repo): bảng `herbs/diseases/remedies/packs`, người dùng gửi bài thuốc → hàng chờ duyệt → xuất gói JSON.
 - Tra cứu ảnh dược liệu / nhận diện bằng ảnh; kiểm tra **tương tác thuốc tây – thảo dược**; nhắc lịch dùng thuốc; đa ngôn ngữ; so sánh dược liệu; bản in đơn thuốc.
-- Hiện kho gồm 46 dược liệu, 20 nhóm bệnh, 33 bài thuốc (+ gói v2). Cần mở rộng dần qua quy trình duyệt ở trên; **nội dung cần được dược sĩ/thầy thuốc có chuyên môn thẩm định trước khi công bố rộng rãi.**
+- Hiện kho gồm 65 dược liệu, 41 nhóm bệnh, 304 bài thuốc (+ gói v2). Cần mở rộng dần qua quy trình duyệt ở trên; **nội dung cần được dược sĩ/thầy thuốc có chuyên môn thẩm định trước khi công bố rộng rãi.**
+
+## Nguồn dữ liệu đã tích hợp
+
+| File | Nguồn | Nội dung |
+|---|---|---|
+| `data.js` | Biên soạn ban đầu | 46 dược liệu, 20 nhóm bệnh, 33 bài thuốc |
+| `data-rau.js` | *Cây rau cây thuốc* — Bộ Y tế, Vụ Y học cổ truyền, NXB Y học, 2005 (bản scan, 31 cây) | 18 dược liệu mới (bí ngô, bí xanh, cải canh, cải củ, cần tây, đậu ván trắng, gai, hành, hẹ, húng giổi, mồng tơi, mơ tam thể, mùi, mướp, rau ngót, rau răm, riềng, thổ cao ly sâm), bổ sung tên gọi khác/cách trồng/thu hái/liều cho 13 dược liệu sẵn có, 65 bài thuốc ứng dụng |
+| `data-kampo.js` | *206 bài thuốc Nhật Bản* (cổ phương Kampo, bản dịch tiếng Việt, file `.prc`) | 205 bài (bài 178 trong bản gốc bị mất nội dung) kèm thành phần, liều, công dụng, giải thích; gắn nhãn **kê đơn – không tự dùng** |
+
+Cách chuyển đổi: file `.prc` giải nén PalmDOC → văn bản, tách theo mục *Thành phần / Cách dùng / Công dụng / Giải thích*, tự gán bệnh theo từ khóa trong phần công dụng. PDF là bản scan nên được đọc và chuyển thủ công từng trang. Các lưu ý an toàn bổ sung của ứng dụng (mật ong với trẻ <12 tháng, rau ngót, rượu thuốc, rắn cắn, Ma hoàng/Phụ tử…) được ghi rõ là “bổ sung của ứng dụng”.
+
+**Cần kiểm tra:** (1) bản quyền/giấy phép dùng lại nội dung hai cuốn sách khi công bố công khai; (2) thẩm định chuyên môn các bài từ nguồn cũ (một số bài dân gian như rượu thuốc, dùng mật ong cho trẻ, đắp tỏi… có nguy cơ — đã gắn cảnh báo); (3) gán bệnh cho bài Kampo là tự động, cần rà soát.

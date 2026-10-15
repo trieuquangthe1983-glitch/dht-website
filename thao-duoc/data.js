@@ -469,3 +469,18 @@ remedies: [
  mota:"Giúp săn se, giảm viêm lợi/loét miệng nhẹ."}
 ]
 };
+
+/* Mở rộng kho từ các file nguồn bổ sung (data-*.js): gộp theo `id`.
+   herbPatch: bổ sung tên gọi khác / cách trồng / thu hái / liều theo sách cho dược liệu đã có. */
+window.DHT_EXTEND=function(p){
+  var d=window.DHT_DATA;
+  Object.assign(d.groups,p.groups||{});d.nguon=Object.assign(d.nguon||{},p.nguon||{});
+  function put(arr,list){var m=new Map(arr.map(function(x){return[x.id,x]}));(list||[]).forEach(function(x){m.set(x.id,x)});return Array.from(m.values())}
+  d.herbs=put(d.herbs,p.herbs);d.diseases=put(d.diseases,p.diseases);d.remedies=put(d.remedies,p.remedies);
+  (p.herbPatch||[]).forEach(function(pt){
+    var h=d.herbs.find(function(x){return x.id===pt.id});if(!h)return;
+    h.khac=Array.from(new Set((h.khac||[]).concat(pt.khac||[])));
+    ["trong","thuHai","lieuSach"].forEach(function(k){if(pt[k])h[k]=pt[k]});
+    h.congDung=(h.congDung||[]).concat((pt.congDung||[]).filter(function(x){return(h.congDung||[]).indexOf(x)<0}));
+  });
+};

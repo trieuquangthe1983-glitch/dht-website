@@ -11,9 +11,12 @@ const store={
 };
 const SAFE={thai:"Đang mang thai",bu:"Đang cho con bú",tre:"Trẻ nhỏ",ha:"Huyết áp cao",dd:"Tiểu đường",cd:"Dùng thuốc chống đông/kháng tiểu cầu",dayday:"Bệnh dạ dày (loét, viêm, trào ngược)",gan:"Bệnh gan / thận",mach:"Bệnh tim mạch",di:"Cơ địa dị ứng (họ Cúc, họ Cà…)"};
 const NGUON={"co-truyen":["Cổ truyền","ct"],"dan-gian":["Dân gian","dg"],"nghien-cuu":["Có nghiên cứu","nc"],"ca-nhan":["Cá nhân – chưa kiểm chứng","w"]};
+Object.entries(window.DHT_DATA.nguon||{}).forEach(([k,v])=>{NGUON[k]=v});
+const LOAI={"boi-bo":"Bồi bổ","co-phuong":"Cổ phương Kampo (kê đơn)",benh:"Chữa bệnh"};
 const BC=["","Kinh nghiệm","Có nghiên cứu hỗ trợ","Bằng chứng tốt"];
 
 /* ---------- Dữ liệu hợp nhất ---------- */
+const byRank=(a,b)=>(a.loai==="co-phuong")-(b.loai==="co-phuong")||(b.bc||0)-(a.bc||0)||a.ten.localeCompare(b.ten,"vi");
 let DB;
 function build(){
   const base=window.DHT_DATA;
@@ -38,7 +41,7 @@ function build(){
     r._names=r.tp.map(t=>t[0]==="_"?t[2]:(H.get(t[0])||{ten:t[0]}).ten);
   });
   DB.herbs.forEach(h=>{h._r=DB.remedies.filter(r=>r.tp.some(t=>t[0]===h.id))});
-  DB.diseases.forEach(d=>{d._r=DB.remedies.filter(r=>(r.benh||[]).includes(d.id)).sort((a,b)=>(b.bc||0)-(a.bc||0))});
+  DB.diseases.forEach(d=>{d._r=DB.remedies.filter(r=>(r.benh||[]).includes(d.id)).sort(byRank)});
   index();
 }
 
@@ -54,7 +57,7 @@ function index(){
   DB.diseases.forEach(d=>add("d",d,[[d.ten,10],[d.tk||[],8],[d.nhom,3],[d.mota,1]]));
   DB.remedies.forEach(r=>{
     const ds=(r.benh||[]).map(id=>DB.D.get(id)).filter(Boolean);
-    add("r",r,[[r.ten,10],[ds.map(d=>d.ten),7],[ds.flatMap(d=>d.tk||[]),5],[r._names,6],[r.mota||"",2],[r.luuY||"",0.5]]);
+    add("r",r,[[r.ten,10],[ds.map(d=>d.ten),7],[ds.flatMap(d=>d.tk||[]),5],[r._names,6],[r.mota||"",2],[r.luuY||"",0.5],[r.gt||"",0.3]]);
   });
   DB.herbs.forEach(h=>add("h",h,[[h.ten,10],[h.khac||[],9],[h.latin||"",5],[h.congDung||[],4],[h.nhanBiet||"",1],[DB.groups[h.nhom]||"",2]]));
 }
@@ -74,7 +77,7 @@ function search(q){
     if(!all)return;
     if(toks.length>1)it.f.forEach(f=>{if(toks.every((tk,i)=>fieldScore(f,tk,raws[i]||tk)>0))tot+=f.w*3});
     if(it.f[0].full===norm(q))tot+=25;
-    out.push({it,s:tot+(it.type==="d"?2:0)});
+    out.push({it,s:tot+(it.type==="d"?2:0)-(it.o.loai==="co-phuong"?4:0)});
   });
   return out.sort((a,b)=>b.s-a.s).map(x=>x.it);
 }
@@ -100,9 +103,9 @@ function remedyCard(r){
   <button class="fav ${f?"on":""}" data-fav="${esc(r.id)}" aria-label="Yêu thích">${f?"★":"☆"}</button></a>`}
 function herbCard(h){
   const c=conflicts(h.cd);
-  return`<a class="card" href="#/thao-duoc/${esc(h.id)}"><span class="em">${esc(h.e||"🌿")}</span><h4>${esc(h.ten)}</h4><p><i>${esc(h.latin)}</i></p>
+  return`<a class="card" href="#/thao-duoc/${esc(h.id)}"><span class="em">${esc(h.e||"🌿")}</span><h4>${esc(h.ten)}</h4>${h.latin?`<p><i>${esc(h.latin)}</i></p>`:""}
   <p>${esc((h.congDung||[])[0]||"")}</p>
-  <div class="meta"><span class="tag">${esc(h.tinh)}</span><span class="tag">${esc(h.vi)}</span>${newTag(h)}${c.length?'<span class="tag r">⚠ Lưu ý với hồ sơ của bạn</span>':""}</div></a>`}
+  <div class="meta">${h.tinh?`<span class="tag">${esc(h.tinh)}</span>`:""}${h.vi?`<span class="tag">${esc(h.vi)}</span>`:""}${h.nguon==="bo-y-te"?srcTag(h):""}${newTag(h)}${c.length?'<span class="tag r">⚠ Lưu ý với hồ sơ của bạn</span>':""}</div></a>`}
 function diseaseCard(d){return`<a class="card" href="#/benh/${esc(d.id)}"><h4>${esc(d.ten)}</h4><p>${esc((d.mota||"").slice(0,95))}…</p>
   <div class="meta"><span class="tag">${esc(d.nhom)}</span><span class="tag">${d._r.length} bài thuốc</span>${newTag(d)}</div></a>`}
 const cards=(arr,fn,emptyMsg)=>arr.length?`<div class="grid">${arr.map(fn).join("")}</div>`:`<div class="empty">${emptyMsg||"Không có kết quả."}</div>`;
@@ -134,12 +137,13 @@ function viewDiseases(){
 }
 function viewRemedies(params,boi){
   const fl=params.get("nguon")||"",lo=params.get("loai")||(boi?"boi-bo":"");
-  let arr=DB.remedies.filter(r=>(!fl||r.nguon===fl)&&(!lo||r.loai===lo)).sort((a,b)=>(b.bc||0)-(a.bc||0)||a.ten.localeCompare(b.ten,"vi"));
+  let arr=DB.remedies.filter(r=>(!fl||r.nguon===fl)&&(!lo||r.loai===lo)).sort(byRank);
+  const total=arr.length,lim=Math.max(60,parseInt(params.get("n"))||60);arr=arr.slice(0,lim);
   const base=boi?"#/boi-bo":"#/bai-thuoc";
   const chip=(k,l)=>`<a class="chip ${fl===k?"on":""}" href="${base}${k?"?nguon="+k:""}">${l}</a>`;
-  return`<h2>${boi?"Bài thuốc bồi bổ sức khỏe":"Tất cả bài thuốc"} <small style="color:var(--mut);font-weight:400">(${arr.length})</small></h2>
-  <div class="chips">${chip("","Tất cả")}${chip("co-truyen","Cổ truyền")}${chip("dan-gian","Dân gian")}${chip("nghien-cuu","Có nghiên cứu")}${chip("ca-nhan","Của tôi")}</div>
-  ${cards(arr,remedyCard,"Chưa có bài thuốc nào trong nhóm này.")}`;
+  return`<h2>${boi?"Bài thuốc bồi bổ sức khỏe":"Tất cả bài thuốc"} <small style="color:var(--mut);font-weight:400">(${total})</small></h2>
+  <div class="chips">${chip("","Tất cả")}${chip("co-truyen","Cổ truyền")}${chip("dan-gian","Dân gian")}${chip("nghien-cuu","Có nghiên cứu")}${chip("bo-y-te","Sách Bộ Y tế")}${chip("kampo","Cổ phương Kampo")}${chip("ca-nhan","Của tôi")}</div>
+  ${cards(arr,remedyCard,"Chưa có bài thuốc nào trong nhóm này.")}${total>lim?`<p class="row" style="justify-content:center"><a class="btn o" href="${base}?${fl?"nguon="+fl+"&":""}n=${lim+120}">Xem thêm (${total-lim} bài)</a></p>`:""}`;
 }
 function viewHerbs(params){
   const g=params.get("nhom")||"",t=params.get("tinh")||"";
@@ -175,11 +179,13 @@ function viewRemedy(id){
   const f=favs().has(r.id);
   return`<div class="crumb"><a href="javascript:history.back()">← Quay lại</a></div>
   <div class="row" style="justify-content:space-between"><h2 style="margin:6px 0">${esc(r.ten)}</h2><div class="row"><button class="btn o" data-fav="${esc(r.id)}">${f?"★ Đã lưu":"☆ Lưu"}</button><button class="btn o" id="shareBtn">Chia sẻ</button></div></div>
-  <div class="meta">${srcTag(r)}<span class="tag">${stars(r.bc)} ${esc(BC[r.bc||1])}</span><span class="tag">${r.loai==="boi-bo"?"Bồi bổ":"Chữa bệnh"}</span>${newTag(r)}</div>
+  <div class="meta">${srcTag(r)}<span class="tag">${stars(r.bc)} ${esc(BC[r.bc||1])}</span><span class="tag">${esc(LOAI[r.loai]||"Chữa bệnh")}</span>${newTag(r)}</div>
   ${r.mota?`<p>${esc(r.mota)}</p>`:""}
+  ${r.loai==="co-phuong"?`<div class="box red"><h3>Bài thuốc kê đơn — không tự dùng</h3><p>Cổ phương Nhật Bản được chỉ định theo “chứng” (thể trạng, triệu chứng) của từng người. Chỉ dùng khi có thầy thuốc y học cổ truyền thăm khám và kê đơn.</p></div>`:""}
   ${safetyBox(r._cd,"Bài thuốc này")}
   <div class="box"><h3 style="margin-top:0">Thành phần</h3><ul class="ing">${r.tp.map(t=>{const h=DB.H.get(t[0]);return`<li>${h?`<a href="#/thao-duoc/${esc(h.id)}">${esc(h.e||"")} ${esc(h.ten)}</a>`:`<span>${esc(t[2]||t[0])}</span>`}<span>${esc(t[1])}</span></li>`}).join("")}</ul></div>
   <div class="box"><dl class="dl"><dt>Cách làm</dt><dd>${esc(r.lam)}</dd><dt>Cách dùng</dt><dd>${esc(r.dung)}</dd><dt>Lưu ý</dt><dd>${esc(r.luuY)}</dd></dl></div>
+  ${r.gt?`<details class="box"><summary><b>Giải thích theo sách</b></summary>${r.gt.split("\n").map(p=>`<p>${esc(p)}</p>`).join("")}</details>`:""}
   ${ds.length?`<h3>Dùng cho</h3><div class="chips">${ds.map(d=>`<a class="chip" href="#/benh/${esc(d.id)}">${esc(d.ten)}</a>`).join("")}</div>
   <div class="box red"><h3>🚩 Đi khám khi</h3><ul>${[...new Set(ds.flatMap(d=>d.canKham||[]))].slice(0,6).map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`:""}
   ${r._mine?`<button class="btn d" data-del="${esc(r.id)}">Xóa bài thuốc này</button>`:""}`;
@@ -187,12 +193,12 @@ function viewRemedy(id){
 function viewHerb(id){
   const h=DB.H.get(id);if(!h)return nf();
   return`<div class="crumb"><a href="javascript:history.back()">← Quay lại</a></div>
-  <h2 style="margin:6px 0">${esc(h.e||"")} ${esc(h.ten)}</h2><p style="margin:0;color:var(--mut)"><i>${esc(h.latin)}</i> — ${esc(h.ho)}</p>
-  <div class="meta"><span class="tag">${esc(DB.groups[h.nhom]||"")}</span><span class="tag">Tính: ${esc(h.tinh)}</span><span class="tag">Vị: ${esc(h.vi)}</span>${newTag(h)}</div>
+  <h2 style="margin:6px 0">${esc(h.e||"")} ${esc(h.ten)}</h2>${h.latin?`<p style="margin:0;color:var(--mut)"><i>${esc(h.latin)}</i>${h.ho?" — "+esc(h.ho):""}</p>`:""}
+  <div class="meta"><span class="tag">${esc(DB.groups[h.nhom]||"")}</span>${h.tinh?`<span class="tag">Tính: ${esc(h.tinh)}</span>`:""}${h.vi?`<span class="tag">Vị: ${esc(h.vi)}</span>`:""}${h.nguon==="bo-y-te"?srcTag(h):""}${newTag(h)}</div>
   ${safetyBox(h.cd,"Dược liệu này")}
   <div class="box"><dl class="dl"><dt>Tên gọi khác</dt><dd>${esc((h.khac||[]).join(", ")||"—")}</dd><dt>Bộ phận dùng</dt><dd>${esc(h.bo)}</dd>
   <dt>Công dụng</dt><dd><ul style="margin:0;padding-left:18px">${(h.congDung||[]).map(x=>`<li>${esc(x)}</li>`).join("")}</ul></dd>
-  <dt>🔍 Cách nhận biết</dt><dd>${esc(h.nhanBiet)}</dd><dt>Liều dùng tham khảo</dt><dd>${esc(h.lieu)}</dd><dt>Lưu ý</dt><dd>${esc(h.luuY)}</dd></dl></div>
+  ${h.nhanBiet?`<dt>🔍 Cách nhận biết</dt><dd>${esc(h.nhanBiet)}</dd>`:""}${h.trong?`<dt>🌱 Cách trồng</dt><dd>${esc(h.trong)}</dd>`:""}${h.thuHai?`<dt>Thu hái, chế biến</dt><dd>${esc(h.thuHai)}</dd>`:""}<dt>Liều dùng tham khảo</dt><dd>${esc(h.lieu)}${h.lieuSach&&h.lieuSach!==h.lieu?`<br><small>Theo sách “Cây rau cây thuốc”: ${esc(h.lieuSach)}</small>`:""}</dd><dt>Lưu ý</dt><dd>${esc(h.luuY)}</dd></dl></div>
   <h3>Bài thuốc có dùng ${esc(h.ten)} (${h._r.length})</h3>${cards(h._r,remedyCard,"Chưa có bài thuốc.")}`;
 }
 const nf=()=>`<div class="empty">Không tìm thấy nội dung. <a href="#/">Về trang chủ</a></div>`;
