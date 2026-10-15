@@ -1,0 +1,19 @@
+{
+ "version": 2,
+ "date": "2026-10-15",
+ "note": "Bổ sung hương nhu và bài giải cảm nắng",
+ "herbs": [
+  {"id":"huong-nhu","ten":"Hương nhu","khac":["Hương nhu trắng","É lớn"],"latin":"Ocimum gratissimum","ho":"Hoa môi (Lamiaceae)","e":"🌿","nhom":"giai-bieu","tinh":"Ôn","vi":"Cay","bo":"Lá, ngọn mang hoa",
+   "congDung":["Giải cảm nắng, cảm lạnh","Giảm đầy bụng, đau bụng do lạnh"],
+   "nhanBiet":"Cây thảo/bán bụi cao 0,5–1,5 m, thân vuông, lá mọc đối mép răng cưa, vò có mùi thơm nồng đặc trưng (eugenol). Dễ nhầm với húng quế.",
+   "lieu":"Khô 6–12 g/ngày.","luuY":"Không dùng khi ra nhiều mồ hôi, hư nhiệt. Phụ nữ mang thai thận trọng.","cd":["thai"]}
+ ],
+ "remedies": [
+  {"id":"huong-nhu-tia-to","ten":"Nước hương nhu – tía tô giải cảm","benh":["cam-lanh","day-bung"],"loai":"benh","nguon":"co-truyen","bc":1,
+   "tp":[["huong-nhu","10 g"],["tia-to","10 g"],["gung","3 lát"]],
+   "lam":"Cho dược liệu vào 400 ml nước sôi, đậy nắp hãm hoặc đun nhỏ lửa 5–7 phút, lọc.",
+   "dung":"Uống nóng 1–2 lần/ngày trong 2–3 ngày, sau đó lau khô mồ hôi, tránh gió.",
+   "luuY":"Sốt cao, khó thở hoặc triệu chứng kéo dài hơn 3 ngày cần đi khám. Phụ nữ có thai: hỏi thầy thuốc.",
+   "mota":"Bài giải cảm cổ truyền khi trời lạnh, cảm kèm đầy bụng."}
+ ]
+}
